@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SEO -->
+    <title>Curriculum Vitae - Michel de Souza</title>
+    <meta name="description" content="Curriculum Vitae of Michel de Souza — Software Engineer in career transition, CS50x Harvard, Full-Stack Developer, Travel & Hospitality background.">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="py-5">
+<!-- Botão flutuante para controle de tema (Dark/Light) com micro-animação no hover -->
+<div id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" role="button">
+    <i class="bi bi-moon-stars"></i>
+</div>
+
+<div class="container" style="max-width:860px;">
+
+    <!-- ===== GLOBAL NAVBAR ===== -->
+    <nav class="d-none justify-content-center gap-3 mb-4 mt-2" id="global-nav">
+        <a href="#home" class="btn btn-sm btn-outline-secondary rounded-pill px-3">🏠 Início</a>
+        <a href="#resume" class="btn btn-sm btn-outline-secondary rounded-pill px-3">💼 Currículo Profissional</a>
+        <a href="#values" class="btn btn-sm btn-outline-secondary rounded-pill px-3">❤️ Valores Humanos</a>
+    </nav>
+
+    <!-- ===== SPA VIEW: HOME ===== -->
+    <div id="view-home" class="spa-view">
+        <div class="text-center py-5">
+            <h1 class="display-5 fw-bold" style="color: var(--primary);">Bem-vindo ao Meu Universo Profissional</h1>
+            <p class="lead" style="color: var(--text-desc);">Escolha um departamento para explorar minha trajetória, métricas e princípios.</p>
+            
+            <div class="row g-4 mt-4 justify-content-center">
+                <div class="col-md-5">
+                    <a href="#resume" class="text-decoration-none">
+                        <div class="dept-card">
+                            <i class="bi bi-briefcase-fill dept-icon text-primary"></i>
+                            <h3 class="dept-title">Currículo Profissional</h3>
+                            <p class="dept-desc">Explore minha experiência, educação e proficiência técnica consolidada.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-5">
+                    <a href="#values" class="text-decoration-none">
+                        <div class="dept-card">
+                            <i class="bi bi-heart-pulse-fill dept-icon text-danger"></i>
+                            <h3 class="dept-title">Valores Humanos</h3>
+                            <p class="dept-desc">Conheça os princípios inegociáveis que norteiam minhas decisões e carreira.</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SPA VIEW: RESUME (CV) ===== -->
+    <div id="view-resume" class="spa-view d-none">
+    <!-- ===== HEADER ===== -->
+    <div class="cv-header">
+        <div class="row align-items-center g-3">
+            <div class="col-md-9 order-2 order-md-1">
+                <!-- ID para injeção dinâmica de nome de perfil -->
+                <h1 class="display-6 mb-1" id="profile-name">Michel de Souza</h1>
+                <!-- ID para injeção dinâmica de cargo/títulos -->
+                <p class="subtitle mb-3" id="profile-title">
+                    Software Engineer in Transition · CS50x Harvard · Full-Stack Developer<br>
+                    <span style="opacity:.65; font-size:.8rem;" id="profile-location">New York Area, United States</span>
+                </p>
+                <div>
+                    <!-- Chips com micro-animações de hover para contato e links profissionais -->
+                    <span class="contact-chip">
+                        <i class="bi bi-telephone"></i>
+                        <a href="tel:+18623501161" id="profile-phone-link">+1 (862) 350-1161</a>
+                    </span>
+                    <span class="contact-chip">
+                        <i class="bi bi-envelope"></i>
+                        <a href="mailto:michelstravelus@gmail.com" id="profile-email-link">michelstravelus@gmail.com</a>
+                    </span>
+                    <span class="contact-chip">
+                        <i class="bi bi-linkedin"></i>
+                        <a href="https://www.linkedin.com/in/njfw23/" target="_blank" id="profile-linkedin-link">linkedin.com/in/njfw23</a>
+                    </span>
+                    <span class="contact-chip">
+                        <i class="bi bi-facebook"></i>
+                        <a href="https://www.facebook.com/njfw23" target="_blank" id="profile-facebook-link">facebook.com/njfw23</a>
+                    </span>
+                    <span class="contact-chip">
+                        <i class="bi bi-geo-alt"></i> 
+                        <span id="profile-location-chip-text">New Jersey, USA</span>
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-3 order-1 order-md-2 text-center text-md-end">
+                <img src="https://scontent-lga3-2.xx.fbcdn.net/v/t39.30808-1/680351558_35213996131578073_8785402727836984375_n.jpg?stp=dst-jpg_tt6&amp;cstp=mx880x878&amp;ctp=s720x720&amp;_nc_cat=101&amp;ccb=1-7&amp;_nc_sid=3ab345&amp;_nc_ohc=Kl4u8reMEX0Q7kNvwELudnq&amp;_nc_oc=AdoK6pYX9Rgej27JgZ9PHLfsBB46fyWGjQxI4u89kM1kaDRA28b_fv2BRO9hD1yTJMSzcrC0l3OIJ4cCKIU42Aa4&amp;_nc_zt=24&amp;_nc_ht=scontent-lga3-2.xx&amp;_nc_gid=gu4bK-C8FZvYDjzbsE4IWQ&amp;_nc_ss=7f20f&amp;oh=00_Af4REOj3z5d3qWgk2sGOhJxq8m14IboROFAVoBrWe16Grw&amp;oe=6A1583A8" alt="Michel de Souza" class="rounded-circle shadow-sm" style="width: 130px; height: 130px; object-fit: cover; border: 4px solid rgba(255,255,255,0.2);">
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== BODY ===== -->
+    <div class="cv-body">
+        
+        <!-- ===== DYNAMIC FILTER (EMPLOYER VIEW) ===== -->
+        <div class="p-3 mb-4 rounded" style="background: var(--dogma-bg); border: 1px solid var(--border); transition: all 0.3s;">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <span class="fw-bold" style="font-size: 0.9rem; color: var(--text-main);"><i class="bi bi-funnel-fill text-primary me-2"></i>Foco do Recrutador:</span>
+                <select id="cv-profile-filter" class="form-select form-select-sm" style="width: auto; background: var(--bg-card); color: var(--text-main); border-color: var(--border); box-shadow: none;" onchange="applyProfileFilter(this.value)">
+                    <option value="all" selected>🌟 Ver Perfil Completo (Padrão)</option>
+                    <option value="tech">💻 Engenharia de Software / Tech</option>
+                    <option value="travel">✈️ Turismo e Hospitalidade</option>
+                    <option value="admin">🏢 Gestão, Logística e Administração</option>
+                </select>
+            </div>
+            <div id="filter-feedback" class="mt-2 text-success small fw-bold d-none" style="animation: fadeIn 0.3s;"><i class="bi bi-check-circle-fill me-1"></i>Currículo adaptado dinamicamente para esta vaga.</div>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- ===== LEFT COLUMN ===== -->
+            <div class="col-md-8" style="border-right: 1px solid var(--border);">
+
+                <!-- Professional Summary -->
+                <section class="mb-4">
+                    <h2 class="section-title">Professional Summary</h2>
+                    <!-- ID para injeção dinâmica de resumo de perfil -->
+                    <p style="font-size:.88rem; line-height:1.8; color:var(--text-desc);" id="profile-summary">
+                        Software Engineer in career transition, guided by the technical rigor of Harvard's CS50 and a development 
+                        philosophy based on high-quality processes and defensive architecture. After a solid trajectory in 
+                        real-time service management and logistics (Concierge and Travel Agent), I decided to transfer my 
+                        expertise in solving complex problems into Software Engineering. My technical foundation was forged 
+                        in CS50x, mastering from low-level fundamentals and memory management in C, to algorithm development 
+                        in Python and modern applications with TypeScript, Node.js and SQL.
+                    </p>
+                    <!-- Framework de Engenharia / Dogmas -->
+                    <p class="mb-2" style="font-size:.8rem; font-weight:600; color:var(--primary);">Engineering Framework — Canonical Laws (DOGMAs):</p>
+                    <div id="dogma-container">
+                        <div class="dogma-box"><strong>DOGMA 2:</strong> No Silent Failures — Explicit error handling in all layers.</div>
+                        <div class="dogma-box"><strong>DOGMA 3:</strong> Validate ALL Inputs with Zod — Data integrity via strict schema validation.</div>
+                        <div class="dogma-box"><strong>DOGMA 4:</strong> External Service Isolation — Adapters &amp; SOLID (Dependency Inversion) for maintainability.</div>
+                    </div>
+                </section>
+
+                <!-- Work Experience -->
+                <section class="mb-4">
+                    <h2 class="section-title">Work Experience</h2>
+                    <!-- ID para injeção dinâmica das Experiências Profissionais -->
+                    <div id="experience-list">
+                        <div class="tl-item">
+                            <div class="tl-title">Administrative Clerk</div>
+                            <div class="tl-company">Liberty Mechanical Contractors LLC</div>
+                            <div class="tl-date"><i class="bi bi-geo-alt me-1"></i>Newark, New Jersey · <i class="bi bi-calendar3 ms-1 me-1"></i>Mar 2025 – Present</div>
+                            <div class="tl-desc">Office administration, document management and operational support for a mechanical contracting company.</div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-title">Concierge</div>
+                            <div class="tl-company">CITYBAY BUILDERS AND REALTORS PRIVATE LIMITED</div>
+                            <div class="tl-date"><i class="bi bi-geo-alt me-1"></i>Elizabeth, New Jersey · <i class="bi bi-calendar3 ms-1 me-1"></i>Apr 2023 – Present</div>
+                            <div class="tl-desc">High-standard guest and tenant services, real-time problem resolution, coordination of requests and logistics in a residential/commercial building.</div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-title">Travel Agent</div>
+                            <div class="tl-company">Michels Travel</div>
+                            <div class="tl-date"><i class="bi bi-geo-alt me-1"></i>Newark, New Jersey · <i class="bi bi-calendar3 ms-1 me-1"></i>Jan 2019 – Present</div>
+                            <div class="tl-desc">Planning and coordination of international travel packages. Built the Michel's Travel platform — a full-stack flight booking system using React, Drizzle ORM and Tailwind CSS.</div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-title">Travel Agent</div>
+                            <div class="tl-company">Costamar Travel Group</div>
+                            <div class="tl-date"><i class="bi bi-geo-alt me-1"></i>United States · <i class="bi bi-calendar3 ms-1 me-1"></i>Jun 2015 – Present</div>
+                            <div class="tl-desc">Sales and customer service in a large travel agency network serving the Latin American community in the USA.</div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-title">Driver</div>
+                            <div class="tl-company">Lyft</div>
+                            <div class="tl-date"><i class="bi bi-calendar3 me-1"></i>Jan 2019 – May 2023 · 4 yrs 5 mos</div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-title">Bilingual Receptionist</div>
+                            <div class="tl-company">Kiss — A Procura</div>
+                            <div class="tl-date"><i class="bi bi-calendar3 me-1"></i>Nov 2013 – Present</div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-title">Crew Steward</div>
+                            <div class="tl-company">Costa Crociere</div>
+                            <div class="tl-date"><i class="bi bi-calendar3 me-1"></i>Jan 2013 – Oct 2013 · 10 mos</div>
+                            <div class="tl-desc">On-board service aboard international cruise ships. Multilingual customer experience in a high-pressure hospitality environment.</div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-title">Service Supervisor</div>
+                            <div class="tl-company">Rei do Mate</div>
+                            <div class="tl-date"><i class="bi bi-calendar3 me-1"></i>Feb 2010 – Nov 2010 · 10 mos</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Education -->
+                <section class="mb-4">
+                    <h2 class="section-title">Education</h2>
+                    <!-- ID para injeção dinâmica de Educação/Formação -->
+                    <div id="education-list">
+                        <div class="tl-item">
+                            <div class="tl-title">CS50x — Introduction to Computer Science</div>
+                            <div class="tl-company">Harvard University</div>
+                            <div class="tl-date"><i class="bi bi-calendar3 me-1"></i>Jul 2024 – Dec 2024</div>
+                            <div class="tl-desc">C, Python, SQL, TypeScript, data structures, algorithms, memory management, web development with Flask and JavaScript.</div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-title">English Intermediate B1.2</div>
+                            <div class="tl-company">Coursera</div>
+                            <div class="tl-date"><i class="bi bi-calendar3 me-1"></i>Jul 2024</div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-title">English Intermediate B2 — Applied Linguistics</div>
+                            <div class="tl-company">English Language Academy — MALTA</div>
+                            <div class="tl-date"><i class="bi bi-calendar3 me-1"></i>2013</div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-title">Basic Level — English as a Second Language</div>
+                            <div class="tl-company">IELS Malta, LAL</div>
+                        </div>
+
+                        <div class="tl-item">
+                            <div class="tl-title">High School — General Education</div>
+                            <div class="tl-company">Escola Pública</div>
+                            <div class="tl-date"><i class="bi bi-calendar3 me-1"></i>2003 – 2007</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== BUSINESS ANALYTICS SECTION (DATA ANALYSIS FOCUS) ===== -->
+                <section class="mb-4 d-none" id="analytics-section">
+                    <h2 class="section-title">Professional Impact & Business Analytics</h2>
+                    <p style="font-size:.82rem; color:var(--text-desc); margin-bottom: 1.1rem; line-height: 1.6;">
+                        Métricas de performance e impacto real extraídas de integrações ativas com minhas plataformas de negócios.
+                    </p>
+                    <!-- Contêiner de Cards de Métricas em Destaque -->
+                    <div class="row g-3 mb-3" id="metric-cards-container"></div>
+                    <!-- Gráfico Geral de Analytics (Custo Zero de Licença) -->
+                    <div style="height: 200px; background: var(--dogma-bg); border-radius: 12px; border: 1px solid var(--border); padding: 0.85rem; transition: background var(--transition-speed), border-color var(--transition-speed);">
+                        <canvas id="publicMetricsChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- ===== ACADEMIC PUBLICATIONS & REGISTRY SECTION ===== -->
+                <section class="mb-4 d-none" id="research-section">
+                    <h2 class="section-title">Publications & Scientific Contributions</h2>
+                    <div id="research-list">
+                        <!-- Dynamic Research Cards with realistic DOI Zenodo seals -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- ===== RIGHT COLUMN ===== -->
+            <div class="col-md-4 ps-md-4">
+
+                <!-- Tech Skills -->
+                <section class="mb-4">
+                    <h2 class="section-title">Tech Stack</h2>
+                    <!-- ID para injeção dinâmica de Habilidades Tecnológicas -->
+                    <div id="tech-skills">
+                        <span class="badge-skill tech">TypeScript</span>
+                        <span class="badge-skill tech">JavaScript</span>
+                        <span class="badge-skill tech">Python</span>
+                        <span class="badge-skill tech">C</span>
+                        <span class="badge-skill tech">SQL</span>
+                        <span class="badge-skill tech">Node.js</span>
+                        <span class="badge-skill tech">React</span>
+                        <span class="badge-skill tech">Express</span>
+                        <span class="badge-skill tech">Drizzle ORM</span>
+                        <span class="badge-skill tech">Zod</span>
+                        <span class="badge-skill tech">Git / GitHub</span>
+                        <span class="badge-skill tech">Tailwind CSS</span>
+                    </div>
+                </section>
+
+                <!-- Soft Skills -->
+                <section class="mb-4">
+                    <h2 class="section-title">Core Competencies</h2>
+                    <!-- ID para injeção dinâmica de Competências Principais -->
+                    <div id="core-skills">
+                        <span class="badge-skill">Office Administration</span>
+                        <span class="badge-skill">Travel Consulting</span>
+                        <span class="badge-skill">Travel Agencies</span>
+                        <span class="badge-skill">Customer Service</span>
+                        <span class="badge-skill">Problem Solving</span>
+                        <span class="badge-skill">Clean Code</span>
+                        <span class="badge-skill">Software Architecture</span>
+                        <span class="badge-skill">Algorithms & Data Structures</span>
+                    </div>
+                </section>
+
+                <!-- Languages -->
+                <section class="mb-4">
+                    <h2 class="section-title">Languages</h2>
+                    <!-- ID para injeção dinâmica de Idiomas -->
+                    <div id="language-list">
+                        <div class="lang-wrap">
+                            <div class="d-flex justify-content-between">
+                                <span class="lang-label">Portuguese</span>
+                                <span class="lang-sub">Native</span>
+                            </div>
+                            <div class="lang-track"><div class="lang-fill" style="width:100%"></div></div>
+                        </div>
+
+                        <div class="lang-wrap">
+                            <div class="d-flex justify-content-between">
+                                <span class="lang-label">English</span>
+                                <span class="lang-sub">Intermediate B2</span>
+                            </div>
+                            <div class="lang-track"><div class="lang-fill" style="width:72%"></div></div>
+                        </div>
+
+                        <div class="lang-wrap">
+                            <div class="d-flex justify-content-between">
+                                <span class="lang-label">Spanish</span>
+                                <span class="lang-sub">Basic</span>
+                            </div>
+                            <div class="lang-track"><div class="lang-fill" style="width:35%"></div></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Certifications -->
+                <section class="mb-4">
+                    <h2 class="section-title">Certifications</h2>
+                    <!-- ID para injeção dinâmica de Certificações -->
+                    <ul class="list-unstyled" style="font-size:.82rem;" id="certification-list">
+                        <li class="mb-2"><i class="bi bi-patch-check-fill text-primary me-2"></i>CS50x — Harvard University (edX Verified)</li>
+                        <li class="mb-2"><i class="bi bi-patch-check-fill text-primary me-2"></i>Getting Started with Microsoft Word</li>
+                        <li class="mb-2"><i class="bi bi-patch-check-fill text-primary me-2"></i>Introduction to Microsoft Excel</li>
+                        <li class="mb-2"><i class="bi bi-patch-check-fill text-primary me-2"></i>English Intermediate B1.2 — Coursera</li>
+                    </ul>
+                </section>
+
+                <!-- Key Project -->
+                <section class="mb-4">
+                    <h2 class="section-title">Main Project</h2>
+                    <div style="background:var(--dogma-bg); border-radius:8px; padding:.85rem; font-size:.82rem; color:var(--text-desc); border:1px solid var(--border); transition: background var(--transition-speed), border-color var(--transition-speed);">
+                        <div style="font-weight:600; color:var(--primary); margin-bottom:.35rem; transition: color var(--transition-speed);">✈️ Michel's Travel Platform</div>
+                        Full-stack flight booking system built with React, Node.js, Drizzle ORM, Zod, and Tailwind CSS. 
+                        Implements all Canonical Laws (DOGMAs) for robustness, security and scalability.
+                    </div>
+                </section>
+
+                <!-- References -->
+                <section>
+                    <h2 class="section-title">References</h2>
+                    <p style="font-size:.8rem; color:var(--text-muted); transition: color var(--transition-speed);">Available upon request.</p>
+                </section>
+
+            </div>
+        </div>
+        </div>
+    </div><!-- /cv-body -->
+    </div><!-- /view-resume -->
+
+    <!-- ===== SPA VIEW: HUMAN VALUES ===== -->
+    <div id="view-values" class="spa-view d-none">
+        <div class="cv-header" style="border-radius: 14px;">
+            <div class="text-center">
+                <h2 class="display-6 mb-1 text-white"><i class="bi bi-compass"></i> Valores Humanos</h2>
+                <p class="subtitle mb-0 text-white opacity-75">A base de caráter por trás de cada linha de código e interação.</p>
+            </div>
+        </div>
+        <div class="cv-body mt-3" style="border-radius: 14px;">
+            <div class="row g-4" id="values-list">
+                <!-- Injetado dinamicamente via script.js -->
+            </div>
+        </div>
+    </div><!-- /view-values -->
+
+</div><!-- /container -->
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+<!-- Chart.js (Open Source - Custo Zero - Lei 14) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Script dinâmico com lógica de controle de tema e integração à API robusta (Fallback Silencioso) -->
+<!-- Lógica de apresentação desacoplada em conformidade com as Leis de Camadas -->
+<script src="script.js" defer></script>
+</body>
+</html>

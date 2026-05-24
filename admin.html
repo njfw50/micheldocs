@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Michel's AI Control Desk — Admin</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ===== DEFINITIVE ADMIN CSS SYSTEM (MIDNIGHT GLASSMORPHISM) ===== */
+        :root {
+            --bg-body: #050a15;
+            --bg-card: rgba(15, 23, 42, 0.65);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #2563eb;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 50% 0%, #0c1c38 0%, var(--bg-body) 70%);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ---- Glassmorphism Card ---- */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            padding: 2rem;
+            transition: border-color 0.3s, transform 0.2s;
+        }
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* ---- Login Wrapper ---- */
+        #login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 7, 18, 0.95);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+        .login-card {
+            max-width: 420px;
+            width: 100%;
+            padding: 2.5rem;
+            border-radius: 20px;
+        }
+
+        /* ---- Admin Layout ---- */
+        .admin-header {
+            border-bottom: 1px solid var(--border-glass);
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+        }
+        .admin-title {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff 30%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* ---- Tab Controls ---- */
+        .nav-tabs-glass {
+            border: none;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .nav-tabs-glass .nav-link {
+            color: var(--text-muted);
+            border: 1px solid transparent;
+            background: rgba(255,255,255,0.02);
+            border-radius: 30px;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .nav-tabs-glass .nav-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.06);
+            border-color: var(--border-glass);
+        }
+        .nav-tabs-glass .nav-link.active {
+            color: #fff;
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        /* ---- Copilot AI Terminal ---- */
+        .terminal-container {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-glass);
+            background: #020617;
+            display: flex;
+            flex-direction: column;
+            height: 460px;
+        }
+        .terminal-header {
+            background: #0f172a;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-glass);
+        }
+        .terminal-dots {
+            display: flex; gap: 6px;
+        }
+        .dot {
+            width: 12px; height: 12px; border-radius: 50%;
+        }
+        .dot.red { background: #ef4444; }
+        .dot.yellow { background: #f59e0b; }
+        .dot.green { background: #10b981; }
+        .terminal-title {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+        .terminal-body {
+            flex-grow: 1;
+            padding: 1.25rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+        }
+        .terminal-msg {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            line-height: 1.5;
+        }
+        .terminal-msg.system {
+            background: rgba(37, 99, 235, 0.15);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            align-self: flex-start;
+            color: #93c5fd;
+        }
+        .terminal-msg.user {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-glass);
+            align-self: flex-end;
+            color: #fff;
+        }
+        .terminal-input-area {
+            background: #0b0f19;
+            padding: 0.85rem;
+            border-top: 1px solid var(--border-glass);
+            display: flex;
+            gap: 0.5rem;
+        }
+        .terminal-input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            flex-grow: 1;
+            outline: none;
+        }
+
+        /* ---- Custom Switches ---- */
+        .form-switch-glass {
+            padding-left: 2.5em;
+        }
+        .form-switch-glass .form-check-input {
+            background-color: rgba(255,255,255,0.08);
+            border-color: var(--border-glass);
+            height: 1.5rem;
+            width: 2.75rem;
+            cursor: pointer;
+            transition: background-position .15s ease-in-out;
+        }
+        .form-switch-glass .form-check-input:checked {
+            background-color: var(--accent-emerald);
+            border-color: var(--accent-emerald);
+        }
+
+        /* ---- Buttons & Form Control ---- */
+        .btn-glass {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-glass);
+            color: #fff;
+            border-radius: 8px;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.88rem;
+            transition: all 0.3s;
+        }
+        .btn-glass:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.25);
+            color: #fff;
+        }
+        .btn-glass-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .btn-glass-primary:hover {
+            background: #1d4ed8;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        .form-control-glass {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-glass);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            padding: 0.6rem 0.85rem;
+            transition: all 0.3s;
+        }
+        .form-control-glass:focus {
+            background: rgba(255,255,255,0.06);
+            border-color: var(--accent-cyan);
+            color: #fff;
+            box-shadow: 0 0 0 0.25rem rgba(6, 182, 212, 0.15);
+        }
+        .form-control-glass::placeholder { color: var(--text-muted); }
+
+        .form-label-glass {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.4rem;
+        }
+
+        /* ---- Scrollbar Styling ---- */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+
+    </style>
+</head>
+<body class="py-4">
+
+<!-- ===== 1. TELA DE LOGIN OVERLAY (SEGURANÇA BANCÁRIA - LEI 14) ===== -->
+<div id="login-overlay">
+    <div class="glass-card login-card text-center">
+        <div class="fs-1 text-primary mb-3"><i class="bi bi-shield-lock-fill"></i></div>
+        <h4 class="mb-1 fw-bold">Acesso Administrativo</h4>
+        <p class="text-muted small mb-4">Insira sua senha de segurança configurada no .env</p>
+        <form onsubmit="handleLogin(event)">
+            <div class="mb-3 text-start">
+                <label class="form-label form-label-glass">Senha de Acesso</label>
+                <input type="password" id="admin-password" class="form-control form-control-glass" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-glass btn-glass-primary w-100 mt-2">Autenticar Sessão</button>
+            <div id="login-error" class="text-danger small mt-3 fw-bold" style="display:none;">Senha incorreta. Acesso negado.</div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== 2. PAINEL DE CONTROLE PRINCIPAL (MAIN ADMIN PANEL) ===== -->
+<div class="container" style="max-width:1140px;">
+    
+    <!-- Header -->
+    <header class="admin-header d-flex align-items-center justify-content-between">
+        <h2 class="admin-title mb-0"><i class="bi bi-cpu"></i> Michel's AI Control Desk</h2>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-dark border border-secondary text-secondary small py-2 px-3"><i class="bi bi-circle-fill text-success me-2"></i>API Conectada</span>
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="handleLogout()"><i class="bi bi-box-arrow-left me-1"></i>Sair</button>
+        </div>
+    </header>
+
+    <div class="row g-4">
+        
+        <!-- ===== LEFT SIDE: AI COPILOT TERMINAL ===== -->
+        <div class="col-lg-5">
+            <div class="glass-card h-100">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-chat-left-dots text-primary"></i> Co-Piloto Gemini AI
+                </h5>
+                <p class="text-muted small mb-4">Atualize qualquer seção do seu currículo por linguagem natural. A IA do ecossistema Google processa, sanitiza e insere na base de dados.</p>
+                
+                <div class="terminal-container">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                        </div>
+                        <span class="terminal-title">gemini-1.5-flash@control-desk</span>
+                    </div>
+                    <div class="terminal-body" id="terminal-log">
+                        <div class="terminal-msg system">
+                            Olá Michel! Sou o Co-Piloto do seu currículo online. 
+                            Como posso apoiar seu crescimento profissional hoje?<br><br>
+                            <em>Exemplo: "Adicione um novo curso técnico 'Lógica de Programação com Python' no Zenodo que concluí este mês com o DOI 10.5281/zenodo.12345"</em>
+                        </div>
+                    </div>
+                    <form onsubmit="handleAICommand(event)">
+                        <div class="terminal-input-area">
+                            <span class="text-primary fw-bold me-1">michel_de_souza $</span>
+                            <input type="text" id="ai-prompt-input" class="terminal-input" placeholder="Digite uma atualização profissional..." autocomplete="off">
+                            <button type="submit" class="btn btn-dark btn-sm rounded border border-secondary text-light px-3"><i class="bi bi-send-fill"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RIGHT SIDE: MANUAL PANEL & ANALYTICS ===== -->
+        <div class="col-lg-7">
+            
+            <!-- Tab Menu -->
+            <ul class="nav nav-tabs nav-tabs-glass" id="adminTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="metrics-tab" data-bs-toggle="tab" data-bs-target="#tab-metrics" type="button" role="tab"><i class="bi bi-graph-up-arrow me-1"></i>Business Analytics</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="research-tab" data-bs-toggle="tab" data-bs-target="#tab-research" type="button" role="tab"><i class="bi bi-bookmark-star me-1"></i>Pesquisas & DOIs</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="cv-tab" data-bs-toggle="tab" data-bs-target="#tab-cv" type="button" role="tab"><i class="bi bi-pencil-square me-1"></i>Ficha Básica</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="adminTabsContent">
+                
+                <!-- Tab: Business Analytics -->
+                <div class="tab-pane fade show active" id="tab-metrics" role="tabpanel">
+                    <div class="glass-card">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-graph-up text-cyan"></i> Métricas & Performance</h5>
+                            <button class="btn btn-glass btn-sm" onclick="showAddMetricModal()"><i class="bi bi-plus-circle me-1"></i>Nova Métrica</button>
+                        </div>
+                        
+                        <!-- Real-time Chart canvas -->
+                        <div class="mb-4" style="height: 240px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--border-glass); padding: 1rem;">
+                            <canvas id="adminMetricsChart"></canvas>
+                        </div>
+
+                        <!-- Metrics list with show/hide toggle -->
+                        <h6 class="fw-bold text-muted mb-3 fs-7 text-uppercase tracking-wider">Gestão de Métricas Ativas</h6>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle small text-nowrap">
+                                <thead>
+                                    <tr class="text-muted border-secondary">
+                                        <th>Métrica</th>
+                                        <th>Valor Atual</th>
+                                        <th>Categoria</th>
+                                        <th class="text-center">Compartilhado</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="metrics-table-body">
+                                    <tr><td colspan="5" class="text-center text-muted">Carregando métricas...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Research & Publications -->
+                <div class="tab-pane fade" id="tab-research" role="tabpanel">
+                    <div class="glass-card">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-journal-text text-success"></i> Registro Científico & DOIs</h5>
+                            <button class="btn btn-glass btn-sm" onclick="showAddResearchModal()"><i class="bi bi-plus-circle me-1"></i>Adicionar Artigo</button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle small">
+                                <thead>
+                                    <tr class="text-muted border-secondary">
+                                        <th>Título da Pesquisa</th>
+                                        <th>Editora/Depósito</th>
+                                        <th>Selo DOI</th>
+                                        <th class="text-center">Visibilidade</th>
+                                        <th class="text-end">Remover</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="research-table-body">
+                                    <tr><td colspan="5" class="text-center text-muted">Carregando artigos científicos...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Manual Profile & CV Sections -->
+                <div class="tab-pane fade" id="tab-cv" role="tabpanel">
+                    <div class="glass-card">
+                        <h5 class="fw-bold mb-4"><i class="bi bi-file-earmark-person text-warning"></i> Informações do Perfil</h5>
+                        <form onsubmit="handleUpdateProfile(event)">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Nome Profissional</label>
+                                    <input type="text" id="prof-name" class="form-control form-control-glass" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Título Acadêmico / Cargo</label>
+                                    <input type="text" id="prof-title" class="form-control form-control-glass" required>
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">E-mail</label>
+                                    <input type="email" id="prof-email" class="form-control form-control-glass" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Telefone</label>
+                                    <input type="text" id="prof-phone" class="form-control form-control-glass" required>
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Linkedin</label>
+                                    <input type="text" id="prof-linkedin" class="form-control form-control-glass">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Facebook</label>
+                                    <input type="text" id="prof-facebook" class="form-control form-control-glass">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label form-label-glass">Resumo Profissional</label>
+                                <textarea id="prof-summary" class="form-control form-control-glass" rows="4" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-glass btn-glass-primary mt-2">Salvar Alterações</button>
+                            <span id="profile-success-msg" class="text-success small ms-3 fw-bold" style="display:none;"><i class="bi bi-check-circle-fill me-1"></i>Perfil atualizado!</span>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===== MODAL 1: ADD METRIC MODAL ===== -->
+<div class="modal fade" id="addMetricModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(10px);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-light" style="background:#0f172a; border: 1px solid var(--border-glass); border-radius:16px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle text-cyan"></i> Nova Métrica</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="submitNewMetric(event)">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Nome da Métrica</label>
+                        <input type="text" id="metric-name" class="form-control form-control-glass" placeholder="Ex: Vendas Michels Travel" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Valor Quantitativo</label>
+                            <input type="number" id="metric-value" class="form-control form-control-glass" placeholder="12500" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Unidade de Medida</label>
+                            <input type="text" id="metric-unit" class="form-control form-control-glass" placeholder="Ex: $, voos, chamados" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Categoria Corporativa</label>
+                        <select id="metric-category" class="form-select form-control-glass" required>
+                            <option value="Travel" selected>Michels Travel (Turismo)</option>
+                            <option value="Logistics">Citybay (Logística / Concierge)</option>
+                            <option value="Contracts">Liberty Contractors (Administrativo / Engenharia)</option>
+                            <option value="Tech">Projetos Tech (Full-Stack / AI)</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <div class="form-check form-switch form-switch-glass">
+                            <input class="form-check-input" type="checkbox" id="metric-is-public" checked>
+                            <label class="form-check-label small text-muted ms-1" for="metric-is-public">Tornar métrica pública no Currículo</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-glass btn-glass-primary">Adicionar Métrica</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL 2: ADD RESEARCH MODAL ===== -->
+<div class="modal fade" id="addResearchModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(10px);">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content text-light" style="background:#0f172a; border: 1px solid var(--border-glass); border-radius:16px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle text-success"></i> Nova Publicação Científica</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="submitNewResearch(event)">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Título da Pesquisa / Protocolo</label>
+                        <input type="text" id="res-title" class="form-control form-control-glass" placeholder="Ex: Protocolo Canônico de Engenharia de IA" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Editora / Repositório</label>
+                            <input type="text" id="res-publisher" class="form-control form-control-glass" placeholder="Ex: Zenodo, Harvard E-Commons" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Digital Object Identifier (DOI)</label>
+                            <input type="text" id="res-doi" class="form-control form-control-glass" placeholder="Ex: 10.5281/zenodo.123456">
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Data de Publicação</label>
+                            <input type="text" id="res-date" class="form-control form-control-glass" placeholder="Ex: Março 2025" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Link para o PDF / Repositório</label>
+                            <input type="url" id="res-url" class="form-control form-control-glass" placeholder="Ex: https://zenodo.org/record/..." required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Abstract (Resumo Acadêmico)</label>
+                        <textarea id="res-abstract" class="form-control form-control-glass" rows="4" placeholder="Escreva o resumo executivo ou abstract do seu trabalho..." required></textarea>
+                    </div>
+                    <div class="mb-2">
+                        <div class="form-check form-switch form-switch-glass">
+                            <input class="form-check-input" type="checkbox" id="res-is-public" checked>
+                            <label class="form-check-label small text-muted ms-1" for="res-is-public">Tornar publicação pública no Currículo</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-glass btn-glass-primary">Registrar Artigo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<!-- Chart.js (Open Source - Custo Zero - Lei 14) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Admin Control JavaScript file -->
+<script src="admin.js"></script>
+
+</body>
+</html>

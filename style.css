@@ -1,0 +1,268 @@
+/* ==========================================================================
+   CSS DEFINITIVO — CURRÍCULO PREMIUM DE MICHEL DE SOUZA
+   ==========================================================================
+   CONFORMIDADE CANÔNICA (LEIS 5, 9 E 14):
+   1. Separação de Camadas: Isolamento completo de estilos visuais fora da estrutura HTML.
+   2. Alta Fidelidade Estética: Cores harmônicas (Midnight/Light), variáveis fluidas e transições suaves.
+   3. Custo Zero e Simplicidade: CSS Puro e responsivo sobre Bootstrap 5 nativo.
+   ========================================================================== */
+
+/* ===== 1. VARIÁVEIS DO SISTEMA DE DESIGN (THEME TOKENS) ===== */
+:root {
+    --primary: #0a2540;
+    --accent:  #2563eb;
+    --accent2: #06b6d4;
+    --bg-body: #f0f4f8;
+    --bg-card: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --text-desc: #475569;
+    --border:  #e2e8f0;
+    --shadow-card: 0 10px 40px rgba(10,37,64,0.08);
+    --header-grad: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+    --header-decor-accent: rgba(37,99,235,0.25);
+    --dogma-bg: #f8faff;
+    --dogma-border: var(--accent2);
+    --skill-bg: #eff6ff;
+    --skill-border: #bfdbfe;
+    --skill-color: #1e40af;
+    --skill-tech-bg: #f0fdf4;
+    --skill-tech-border: #bbf7d0;
+    --skill-tech-color: #15803d;
+    --transition-speed: 0.3s;
+}
+
+[data-theme="dark"] {
+    --primary: #60a5fa;
+    --accent:  #3b82f6;
+    --accent2: #22d3ee;
+    --bg-body: #090d16;
+    --bg-card: #0f172a;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-desc: #cbd5e1;
+    --border:  #1e293b;
+    --shadow-card: 0 10px 40px rgba(0,0,0,0.5);
+    --header-grad: linear-gradient(135deg, #0b1329 0%, #1e293b 100%);
+    --header-decor-accent: rgba(34,211,238,0.12);
+    --dogma-bg: #1e293b;
+    --dogma-border: var(--accent2);
+    --skill-bg: #1e293b;
+    --skill-border: #334155;
+    --skill-color: #93c5fd;
+    --skill-tech-bg: #064e3b;
+    --skill-tech-border: #047857;
+    --skill-tech-color: #34d399;
+}
+
+/* ===== 2. ELEMENTOS GLOBAIS ===== */
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-body);
+    color: var(--text-main);
+    transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+/* ===== 3. COMPONENTE: FLOTATING THEME TOGGLE (GLASSMORPHISM) ===== */
+#theme-toggle {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1050;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+    background: var(--bg-card);
+    color: var(--text-main);
+    font-size: 1.25rem;
+    transition: transform 0.2s, background-color var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
+}
+#theme-toggle:hover {
+    transform: scale(1.1);
+    background: var(--border);
+}
+
+/* ===== 4. COMPONENTE: CABEÇALHO DO CURRÍCULO (HEADER) ===== */
+.cv-header {
+    background: var(--header-grad);
+    color: #fff;
+    padding: 2.5rem 2.5rem 2rem;
+    border-radius: 14px 14px 0 0;
+    position: relative;
+    overflow: hidden;
+    transition: background var(--transition-speed);
+}
+.cv-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+}
+.cv-header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -40px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: var(--header-decor-accent);
+    transition: background var(--transition-speed);
+}
+.cv-header h1 { font-weight: 700; letter-spacing: -.5px; }
+.cv-header .subtitle { opacity: .8; font-size: .92rem; letter-spacing: .3px; }
+
+/* ===== 5. COMPONENTE: CONTATOS (CONTACT CHIPS) ===== */
+.contact-chip {
+    display: inline-flex; align-items: center; gap: .35rem;
+    background: rgba(255,255,255,.12);
+    border-radius: 20px;
+    padding: .25rem .85rem;
+    font-size: .82rem;
+    margin: .2rem .15rem;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s, transform 0.2s;
+}
+.contact-chip:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+}
+.contact-chip a { color: #93c5fd; text-decoration: none; }
+.contact-chip a:hover { text-decoration: underline; }
+
+/* ===== 6. COMPONENTE: CORPO PRINCIPAL (CV BODY CARD) ===== */
+.cv-body {
+    background: var(--bg-card);
+    border-radius: 0 0 14px 14px;
+    box-shadow: var(--shadow-card);
+    padding: 2rem 2.5rem 2.5rem;
+    transition: background var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+/* ===== 7. SEÇÕES E TIMELINES ===== */
+.section-title {
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: var(--accent);
+    border-left: 3px solid var(--accent2);
+    padding-left: .65rem;
+    margin-bottom: 1.1rem;
+    transition: color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.tl-item { 
+    position: relative; 
+    padding-left: 1.4rem; 
+    margin-bottom: 1.5rem; 
+    transition: transform 0.2s;
+}
+.tl-item:hover {
+    transform: translateX(4px);
+}
+.tl-item::before {
+    content: '';
+    position: absolute; left: 0; top: 7px;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--accent);
+    transition: background var(--transition-speed);
+}
+.tl-item::after {
+    content: '';
+    position: absolute; left: 4px; top: 17px;
+    width: 1px; bottom: -16px;
+    background: var(--border);
+    transition: background var(--transition-speed);
+}
+.tl-item:last-child::after { display: none; }
+
+.tl-title   { font-weight: 600; font-size: .95rem; }
+.tl-company { font-size: .83rem; color: var(--accent); font-weight: 500; transition: color var(--transition-speed); }
+.tl-date    { font-size: .76rem; color: var(--text-muted); margin-bottom: .3rem; transition: color var(--transition-speed); }
+.tl-desc    { font-size: .85rem; color: var(--text-desc); line-height: 1.65; margin-top: .3rem; transition: color var(--transition-speed); }
+
+/* ===== 8. COMPONENTE: BADGES DE HABILIDADES (SKILL BADGES) ===== */
+.badge-skill {
+    display: inline-block;
+    background: var(--skill-bg);
+    color: var(--skill-color);
+    border: 1px solid var(--skill-border);
+    border-radius: 20px;
+    padding: .22rem .75rem;
+    font-size: .76rem;
+    font-weight: 500;
+    margin: .18rem .1rem;
+    transition: background var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed), transform 0.2s;
+}
+.badge-skill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+.badge-skill.tech {
+    background: var(--skill-tech-bg);
+    border-color: var(--skill-tech-border);
+    color: var(--skill-tech-color);
+}
+
+/* ===== 9. IDIOMAS (BARRA DE PROGRESSO) ===== */
+.lang-wrap { margin-bottom: .75rem; }
+.lang-label { font-size: .84rem; font-weight: 600; }
+.lang-sub   { font-size: .74rem; color: var(--text-muted); transition: color var(--transition-speed); }
+.lang-track { height: 5px; background: var(--border); border-radius: 3px; margin-top: 5px; transition: background var(--transition-speed); }
+.lang-fill  { height: 5px; border-radius: 3px;
+              background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: background var(--transition-speed); }
+
+/* ===== 10. COMPONENTE: DOGMA BOX ===== */
+.dogma-box {
+    background: var(--dogma-bg);
+    border-left: 3px solid var(--dogma-border);
+    border-radius: 0 8px 8px 0;
+    padding: .75rem 1rem;
+    margin-bottom: .5rem;
+    font-size: .82rem;
+    color: var(--text-desc);
+    transition: background var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed), transform 0.2s;
+}
+.dogma-box:hover {
+    transform: translateX(4px);
+}
+.dogma-box strong { color: var(--text-main); transition: color var(--transition-speed); }
+
+/* ===== 11. AJUSTES DE IMPRESSÃO (PRINT MEDIA) ===== */
+@media print {
+    body { background: #fff !important; color: #000 !important; }
+    .cv-body { box-shadow: none !important; }
+    #theme-toggle { display: none !important; }
+}
+
+/* ===== 12. SPA DEPARTMENTS & CARDS ===== */
+.spa-view { animation: fadeIn 0.4s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.dept-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    box-shadow: var(--shadow-card);
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed), border-color var(--transition-speed);
+    height: 100%;
+}
+.dept-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+    box-shadow: 0 15px 35px rgba(37,99,235,0.15);
+}
+.dept-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+.dept-title { font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; }
+.dept-desc { font-size: 0.9rem; color: var(--text-desc); line-height: 1.5; }
