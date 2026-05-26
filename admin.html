@@ -301,9 +301,9 @@
         <div class="col-lg-5">
             <div class="glass-card h-100">
                 <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
-                    <i class="bi bi-chat-left-dots text-primary"></i> Co-Piloto Gemini AI
+                    <i class="bi bi-chat-left-dots text-primary"></i> Co-Piloto LLaMA 3 AI
                 </h5>
-                <p class="text-muted small mb-4">Atualize qualquer seção do seu currículo por linguagem natural. A IA do ecossistema Google processa, sanitiza e insere na base de dados.</p>
+                <p class="text-muted small mb-4">Atualize qualquer seção do seu currículo por linguagem natural. A IA do LLaMA 3 processa localmente, sanitiza e insere na base de dados.</p>
                 
                 <div class="terminal-container">
                     <div class="terminal-header">
@@ -312,11 +312,11 @@
                             <span class="dot yellow"></span>
                             <span class="dot green"></span>
                         </div>
-                        <span class="terminal-title">gemini-1.5-flash@control-desk</span>
+                        <span class="terminal-title">llama3-local@control-desk</span>
                     </div>
                     <div class="terminal-body" id="terminal-log">
                         <div class="terminal-msg system">
-                            Olá Michel! Sou o Co-Piloto do seu currículo online. 
+                            Olá Michel! Sou o Co-Piloto do seu currículo online rodando no LLaMA 3. 
                             Como posso apoiar seu crescimento profissional hoje?<br><br>
                             <em>Exemplo: "Adicione um novo curso técnico 'Lógica de Programação com Python' no Zenodo que concluí este mês com o DOI 10.5281/zenodo.12345"</em>
                         </div>
@@ -338,19 +338,25 @@
             <!-- Tab Menu -->
             <ul class="nav nav-tabs nav-tabs-glass" id="adminTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="metrics-tab" data-bs-toggle="tab" data-bs-target="#tab-metrics" type="button" role="tab"><i class="bi bi-graph-up-arrow me-1"></i>Business Analytics</button>
+                    <button class="nav-link active" id="metrics-tab" data-bs-toggle="tab" data-bs-target="#tab-metrics" type="button" role="tab"><i class="bi bi-graph-up-arrow me-1"></i>Analytics</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="research-tab" data-bs-toggle="tab" data-bs-target="#tab-research" type="button" role="tab"><i class="bi bi-bookmark-star me-1"></i>Pesquisas & DOIs</button>
+                    <button class="nav-link" id="profile-values-tab" data-bs-toggle="tab" data-bs-target="#tab-profile-values" type="button" role="tab"><i class="bi bi-person-badge me-1"></i>Perfil & Valores</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="cv-tab" data-bs-toggle="tab" data-bs-target="#tab-cv" type="button" role="tab"><i class="bi bi-pencil-square me-1"></i>Ficha Básica</button>
+                    <button class="nav-link" id="trajectory-tab" data-bs-toggle="tab" data-bs-target="#tab-trajectory" type="button" role="tab"><i class="bi bi-signpost-split me-1"></i>Trajetória</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="skills-languages-tab" data-bs-toggle="tab" data-bs-target="#tab-skills-languages" type="button" role="tab"><i class="bi bi-mortarboard me-1"></i>Competências</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="portfolio-research-tab" data-bs-toggle="tab" data-bs-target="#tab-portfolio-research" type="button" role="tab"><i class="bi bi-folder-symlink me-1"></i>Portfólio</button>
                 </li>
             </ul>
 
             <div class="tab-content" id="adminTabsContent">
                 
-                <!-- Tab: Business Analytics -->
+                <!-- 1. Tab: Business Analytics & Metrics -->
                 <div class="tab-pane fade show active" id="tab-metrics" role="tabpanel">
                     <div class="glass-card">
                         <div class="d-flex align-items-center justify-content-between mb-4">
@@ -384,14 +390,289 @@
                     </div>
                 </div>
 
-                <!-- Tab: Research & Publications -->
-                <div class="tab-pane fade" id="tab-research" role="tabpanel">
+                <!-- 2. Tab: Perfil, Dogmas & Valores Humanos -->
+                <div class="tab-pane fade" id="tab-profile-values" role="tabpanel">
+                    <div class="glass-card mb-4">
+                        <h5 class="fw-bold mb-4"><i class="bi bi-file-earmark-person text-warning"></i> Informações do Perfil</h5>
+                        <form onsubmit="handleUpdateProfile(event)">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Nome Profissional</label>
+                                    <input type="text" id="prof-name" class="form-control form-control-glass" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Título / Cargo Principal</label>
+                                    <input type="text" id="prof-title" class="form-control form-control-glass" required>
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">E-mail de Contato</label>
+                                    <input type="email" id="prof-email" class="form-control form-control-glass" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Telefone</label>
+                                    <input type="text" id="prof-phone" class="form-control form-control-glass" required>
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">LinkedIn URL</label>
+                                    <input type="text" id="prof-linkedin" class="form-control form-control-glass">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Facebook URL</label>
+                                    <input type="text" id="prof-facebook" class="form-control form-control-glass">
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Localização Física</label>
+                                    <input type="text" id="prof-location" class="form-control form-control-glass" placeholder="New Jersey, USA" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Disponibilidade de Trabalho</label>
+                                    <input type="text" id="prof-availability" class="form-control form-control-glass" placeholder="Ex: Híbrido, Presencial, Relocation">
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Cargos Alvos (Target Roles)</label>
+                                    <input type="text" id="prof-target-roles" class="form-control form-control-glass" placeholder="Ex: Software Engineer, Full-Stack Developer">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label form-label-glass">Hobbies / Interesses</label>
+                                    <input type="text" id="prof-hobbies" class="form-control form-control-glass" placeholder="Ex: Leitura técnica, Xadrez, Ciclismo">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label form-label-glass">Resumo Profissional Acadêmico</label>
+                                <textarea id="prof-summary" class="form-control form-control-glass" rows="4" required></textarea>
+                            </div>
+                            <hr class="border-secondary my-4">
+                            <h6 class="fw-bold text-cyan mb-3"><i class="bi bi-slash-square me-1"></i> Dogmas e Leis Canônicas de Engenharia</h6>
+                            <div class="mb-3">
+                                <label class="form-label form-label-glass">Dogma 1</label>
+                                <input type="text" id="prof-dogma1" class="form-control form-control-glass" placeholder="DOGMA 1">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label form-label-glass">Dogma 2</label>
+                                <input type="text" id="prof-dogma2" class="form-control form-control-glass" placeholder="DOGMA 2">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label form-label-glass">Dogma 3</label>
+                                <input type="text" id="prof-dogma3" class="form-control form-control-glass" placeholder="DOGMA 3">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-glass btn-glass-primary mt-2">Salvar Ficha & Dogmas</button>
+                            <span id="profile-success-msg" class="text-success small ms-3 fw-bold" style="display:none;"><i class="bi bi-check-circle-fill me-1"></i>Perfil atualizado!</span>
+                        </form>
+                    </div>
+
+                    <!-- Gestão de Valores Humanos -->
+                    <div class="glass-card">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-heart text-danger"></i> Princípios & Valores Humanos</h5>
+                            <button class="btn btn-glass btn-sm" onclick="showAddValueModal()"><i class="bi bi-plus-circle me-1"></i>Novo Valor</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle small">
+                                <thead>
+                                    <tr class="text-muted border-secondary">
+                                        <th>Nome do Valor</th>
+                                        <th>Ícone (BI)</th>
+                                        <th>Descrição Curta</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="values-table-body">
+                                    <tr><td colspan="4" class="text-center text-muted">Carregando princípios...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Tab: Trajetória, Educação & Voluntariado -->
+                <div class="tab-pane fade" id="tab-trajectory" role="tabpanel">
+                    <!-- Experiências -->
+                    <div class="glass-card mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-briefcase text-primary"></i> Experiências Profissionais</h5>
+                            <button class="btn btn-glass btn-sm" onclick="showAddExperienceModal()"><i class="bi bi-plus-circle me-1"></i>Nova Experiência</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle small">
+                                <thead>
+                                    <tr class="text-muted border-secondary">
+                                        <th>Cargo</th>
+                                        <th>Empresa</th>
+                                        <th>Local / Período</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="experiences-table-body">
+                                    <tr><td colspan="4" class="text-center text-muted">Carregando histórico profissional...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Educação -->
+                    <div class="glass-card mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-book text-success"></i> Formação Acadêmica & Cursos</h5>
+                            <button class="btn btn-glass btn-sm" onclick="showAddEducationModal()"><i class="bi bi-plus-circle me-1"></i>Nova Educação</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle small">
+                                <thead>
+                                    <tr class="text-muted border-secondary">
+                                        <th>Curso / Título</th>
+                                        <th>Instituição</th>
+                                        <th>Período</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="education-table-body">
+                                    <tr><td colspan="4" class="text-center text-muted">Carregando formação acadêmica...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Voluntariado -->
+                    <div class="glass-card">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-globe-americas text-info"></i> Trabalho Voluntário & Impacto</h5>
+                            <button class="btn btn-glass btn-sm" onclick="showAddVolunteerModal()"><i class="bi bi-plus-circle me-1"></i>Novo Voluntariado</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle small">
+                                <thead>
+                                    <tr class="text-muted border-secondary">
+                                        <th>Função</th>
+                                        <th>Organização</th>
+                                        <th>Período</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="volunteer-table-body">
+                                    <tr><td colspan="4" class="text-center text-muted">Carregando trabalhos voluntários...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Tab: Competências, Idiomas & Certificados -->
+                <div class="tab-pane fade" id="tab-skills-languages" role="tabpanel">
+                    <!-- Habilidades -->
+                    <div class="glass-card mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-gear-fill text-cyan"></i> Competências Técnicas & Centrais</h5>
+                            <button class="btn btn-glass btn-sm" onclick="showAddSkillModal()"><i class="bi bi-plus-circle me-1"></i>Nova Competência</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle small">
+                                <thead>
+                                    <tr class="text-muted border-secondary">
+                                        <th>Competência</th>
+                                        <th>Categoria</th>
+                                        <th>Nível (%)</th>
+                                        <th>Texto Auxiliar</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="skills-table-body">
+                                    <tr><td colspan="5" class="text-center text-muted">Carregando competências...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Idiomas -->
+                    <div class="glass-card mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-translate text-warning"></i> Idiomas Falados</h5>
+                            <button class="btn btn-glass btn-sm" onclick="showAddLanguageModal()"><i class="bi bi-plus-circle me-1"></i>Novo Idioma</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle small">
+                                <thead>
+                                    <tr class="text-muted border-secondary">
+                                        <th>Idioma</th>
+                                        <th>Proficiência</th>
+                                        <th>Leitura</th>
+                                        <th>Escrita</th>
+                                        <th>Conversação</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="languages-table-body">
+                                    <tr><td colspan="6" class="text-center text-muted">Carregando idiomas...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Certificações -->
+                    <div class="glass-card">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-patch-check-fill text-success"></i> Certificações & Diplomas</h5>
+                            <button class="btn btn-glass btn-sm" onclick="showAddCertificationModal()"><i class="bi bi-plus-circle me-1"></i>Nova Certificação</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle small">
+                                <thead>
+                                    <tr class="text-muted border-secondary">
+                                        <th>Título</th>
+                                        <th>Emissor</th>
+                                        <th>Data</th>
+                                        <th>ID da Credencial</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="certifications-table-body">
+                                    <tr><td colspan="5" class="text-center text-muted">Carregando certificações...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Tab: Portfólio, Projetos & Artigos Científicos -->
+                <div class="tab-pane fade" id="tab-portfolio-research" role="tabpanel">
+                    <!-- Projetos -->
+                    <div class="glass-card mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-folder-symlink text-primary"></i> Projetos do Portfólio</h5>
+                            <button class="btn btn-glass btn-sm" onclick="showAddProjectModal()"><i class="bi bi-plus-circle me-1"></i>Novo Projeto</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle small">
+                                <thead>
+                                    <tr class="text-muted border-secondary">
+                                        <th>Título do Projeto</th>
+                                        <th>Stack</th>
+                                        <th class="text-center">Demo / Code</th>
+                                        <th class="text-center">Visibilidade</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="projects-table-body">
+                                    <tr><td colspan="5" class="text-center text-muted">Carregando projetos de portfólio...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Pesquisas e DOIs -->
                     <div class="glass-card">
                         <div class="d-flex align-items-center justify-content-between mb-4">
                             <h5 class="fw-bold mb-0"><i class="bi bi-journal-text text-success"></i> Registro Científico & DOIs</h5>
                             <button class="btn btn-glass btn-sm" onclick="showAddResearchModal()"><i class="bi bi-plus-circle me-1"></i>Adicionar Artigo</button>
                         </div>
-
                         <div class="table-responsive">
                             <table class="table table-dark table-hover align-middle small">
                                 <thead>
@@ -411,66 +692,22 @@
                     </div>
                 </div>
 
-                <!-- Tab: Manual Profile & CV Sections -->
-                <div class="tab-pane fade" id="tab-cv" role="tabpanel">
-                    <div class="glass-card">
-                        <h5 class="fw-bold mb-4"><i class="bi bi-file-earmark-person text-warning"></i> Informações do Perfil</h5>
-                        <form onsubmit="handleUpdateProfile(event)">
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label form-label-glass">Nome Profissional</label>
-                                    <input type="text" id="prof-name" class="form-control form-control-glass" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label form-label-glass">Título Acadêmico / Cargo</label>
-                                    <input type="text" id="prof-title" class="form-control form-control-glass" required>
-                                </div>
-                            </div>
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label form-label-glass">E-mail</label>
-                                    <input type="email" id="prof-email" class="form-control form-control-glass" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label form-label-glass">Telefone</label>
-                                    <input type="text" id="prof-phone" class="form-control form-control-glass" required>
-                                </div>
-                            </div>
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label form-label-glass">Linkedin</label>
-                                    <input type="text" id="prof-linkedin" class="form-control form-control-glass">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label form-label-glass">Facebook</label>
-                                    <input type="text" id="prof-facebook" class="form-control form-control-glass">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label form-label-glass">Resumo Profissional</label>
-                                <textarea id="prof-summary" class="form-control form-control-glass" rows="4" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-glass btn-glass-primary mt-2">Salvar Alterações</button>
-                            <span id="profile-success-msg" class="text-success small ms-3 fw-bold" style="display:none;"><i class="bi bi-check-circle-fill me-1"></i>Perfil atualizado!</span>
-                        </form>
-                    </div>
-                </div>
-
             </div>
         </div>
 
     </div>
 </div>
 
-<!-- ===== MODAL 1: ADD METRIC MODAL ===== -->
+<!-- ===== MODAL 1: ADD/EDIT METRIC MODAL ===== -->
 <div class="modal fade" id="addMetricModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(10px);">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content text-light" style="background:#0f172a; border: 1px solid var(--border-glass); border-radius:16px;">
             <div class="modal-header border-secondary">
-                <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle text-cyan"></i> Nova Métrica</h5>
+                <h5 class="modal-title fw-bold" id="metric-modal-title"><i class="bi bi-plus-circle text-cyan"></i> Nova Métrica</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form onsubmit="submitNewMetric(event)">
+            <form onsubmit="submitMetricForm(event)">
+                <input type="hidden" id="metric-id-input">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label form-label-glass">Nome da Métrica</label>
@@ -504,22 +741,23 @@
                 </div>
                 <div class="modal-footer border-secondary">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-glass btn-glass-primary">Adicionar Métrica</button>
+                    <button type="submit" class="btn btn-glass btn-glass-primary">Salvar Métrica</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- ===== MODAL 2: ADD RESEARCH MODAL ===== -->
+<!-- ===== MODAL 2: ADD/EDIT RESEARCH MODAL ===== -->
 <div class="modal fade" id="addResearchModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(10px);">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content text-light" style="background:#0f172a; border: 1px solid var(--border-glass); border-radius:16px;">
             <div class="modal-header border-secondary">
-                <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle text-success"></i> Nova Publicação Científica</h5>
+                <h5 class="modal-title fw-bold" id="research-modal-title"><i class="bi bi-plus-circle text-success"></i> Nova Publicação Científica</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form onsubmit="submitNewResearch(event)">
+            <form onsubmit="submitResearchForm(event)">
+                <input type="hidden" id="research-id-input">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label form-label-glass">Título da Pesquisa / Protocolo</label>
@@ -547,7 +785,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label form-label-glass">Abstract (Resumo Acadêmico)</label>
-                        <textarea id="res-abstract" class="form-control form-control-glass" rows="4" placeholder="Escreva o resumo executivo ou abstract do seu trabalho..." required></textarea>
+                        <textarea id="res-abstract" class="form-control form-control-glass" rows="4" placeholder="Escreva o resumo executivo..." required></textarea>
                     </div>
                     <div class="mb-2">
                         <div class="form-check form-switch form-switch-glass">
@@ -558,7 +796,424 @@
                 </div>
                 <div class="modal-footer border-secondary">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-glass btn-glass-primary">Registrar Artigo</button>
+                    <button type="submit" class="btn btn-glass btn-glass-primary">Salvar Artigo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL 3: EXPERIENCE MODAL ===== -->
+<div class="modal fade" id="addExperienceModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(10px);">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content text-light" style="background:#0f172a; border: 1px solid var(--border-glass); border-radius:16px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="exp-modal-title"><i class="bi bi-plus-circle text-primary"></i> Nova Experiência</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="submitExperienceForm(event)">
+                <input type="hidden" id="exp-id-input">
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Cargo / Título</label>
+                            <input type="text" id="exp-title" class="form-control form-control-glass" placeholder="Ex: Software Engineer" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Empresa</label>
+                            <input type="text" id="exp-company" class="form-control form-control-glass" placeholder="Ex: Google LLC" required>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Localização</label>
+                            <input type="text" id="exp-location" class="form-control form-control-glass" placeholder="Ex: Mountain View, CA" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Período (Date Range)</label>
+                            <input type="text" id="exp-date-range" class="form-control form-control-glass" placeholder="Ex: Mar 2025 - Present" required>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label form-label-glass">Tamanho da Equipe (Team Size)</label>
+                            <input type="number" id="exp-team-size" class="form-control form-control-glass" placeholder="Ex: 5">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label form-label-glass">Orçamento Gerenciado</label>
+                            <input type="text" id="exp-budget" class="form-control form-control-glass" placeholder="Ex: $50,000">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label form-label-glass">Índice de Ordenação</label>
+                            <input type="number" id="exp-order" class="form-control form-control-glass" placeholder="0" value="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Ferramentas Utilizadas (Separadas por Vírgula)</label>
+                        <input type="text" id="exp-tools" class="form-control form-control-glass" placeholder="Ex: React, FastAPI, Docker">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Descrição Principal</label>
+                        <textarea id="exp-description" class="form-control form-control-glass" rows="3" placeholder="Descrição básica das atividades executadas..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Conquistas & Resultados (Achievements - Bullet Points Markdown)</label>
+                        <textarea id="exp-achievements" class="form-control form-control-glass" rows="4" placeholder="- Reduzi latência de API em 40% usando Redis&#10;- Gerenciei equipe de 5 pessoas"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-glass btn-glass-primary">Salvar Experiência</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL 4: EDUCATION MODAL ===== -->
+<div class="modal fade" id="addEducationModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(10px);">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content text-light" style="background:#0f172a; border: 1px solid var(--border-glass); border-radius:16px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="edu-modal-title"><i class="bi bi-plus-circle text-success"></i> Nova Educação</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="submitEducationForm(event)">
+                <input type="hidden" id="edu-id-input">
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Título Acadêmico / Curso</label>
+                            <input type="text" id="edu-title" class="form-control form-control-glass" placeholder="Ex: Bacharel em Ciência da Computação" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Instituição de Ensino</label>
+                            <input type="text" id="edu-institution" class="form-control form-control-glass" placeholder="Ex: Harvard University" required>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Período (Date Range)</label>
+                            <input type="text" id="edu-date" class="form-control form-control-glass" placeholder="Ex: 2024 - 2025" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Índice de Ordenação</label>
+                            <input type="number" id="edu-order" class="form-control form-control-glass" placeholder="0" value="0">
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Honras / GPA</label>
+                            <input type="text" id="edu-gpa" class="form-control form-control-glass" placeholder="Ex: GPA 3.9, Magna Cum Laude">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Tese / TCC (Thesis Title)</label>
+                            <input type="text" id="edu-thesis" class="form-control form-control-glass" placeholder="Ex: Otimização de Bancos Relacionais">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Grade Curricular Relevante (Coursework)</label>
+                        <input type="text" id="edu-coursework" class="form-control form-control-glass" placeholder="Ex: Estruturas de Dados, Inteligência Artificial, Banco de Dados">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Descrição / Detalhes Gerais</label>
+                        <textarea id="edu-description" class="form-control form-control-glass" rows="4" placeholder="Detalhes adicionais sobre o curso ou formação..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-glass btn-glass-primary">Salvar Educação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL 5: VOLUNTEER WORK MODAL ===== -->
+<div class="modal fade" id="addVolunteerModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(10px);">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content text-light" style="background:#0f172a; border: 1px solid var(--border-glass); border-radius:16px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="vol-modal-title"><i class="bi bi-plus-circle text-info"></i> Novo Trabalho Voluntário</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="submitVolunteerForm(event)">
+                <input type="hidden" id="vol-id-input">
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Função / Cargo</label>
+                            <input type="text" id="vol-role" class="form-control form-control-glass" placeholder="Ex: Desenvolvedor Voluntário" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Organização</label>
+                            <input type="text" id="vol-organization" class="form-control form-control-glass" placeholder="Ex: Cruz Vermelha" required>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Período (Date Range)</label>
+                            <input type="text" id="vol-date" class="form-control form-control-glass" placeholder="Ex: Jan 2024 - Ago 2024" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Índice de Ordenação</label>
+                            <input type="number" id="vol-order" class="form-control form-control-glass" value="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Atividades Desenvolvidas</label>
+                        <textarea id="vol-description" class="form-control form-control-glass" rows="3" placeholder="Explique suas responsabilidades..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Impacto Social Alcançado</label>
+                        <textarea id="vol-impact" class="form-control form-control-glass" rows="3" placeholder="Explique os benefícios que trouxe para a organização ou sociedade..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-glass btn-glass-primary">Salvar Voluntariado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL 6: SKILL MODAL ===== -->
+<div class="modal fade" id="addSkillModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(10px);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-light" style="background:#0f172a; border: 1px solid var(--border-glass); border-radius:16px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="skill-modal-title"><i class="bi bi-plus-circle text-cyan"></i> Nova Competência</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="submitSkillForm(event)">
+                <input type="hidden" id="skill-id-input">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Nome da Competência / Tecnologia</label>
+                        <input type="text" id="skill-name" class="form-control form-control-glass" placeholder="Ex: TypeScript, Docker, Liderança" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Categoria</label>
+                        <select id="skill-category" class="form-select form-control-glass" required>
+                            <option value="tech" selected>Habilidade Técnica (Tech Stack)</option>
+                            <option value="core">Competência Central (Soft Skill / Core)</option>
+                            <option value="language">Idioma (Language)</option>
+                            <option value="certification">Mencionada em Certificado</option>
+                        </select>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Nível (%)</label>
+                            <input type="number" id="skill-percent" class="form-control form-control-glass" placeholder="Ex: 85" min="0" max="100">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Ordenação</label>
+                            <input type="number" id="skill-order" class="form-control form-control-glass" value="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Texto de Proficiência Auxiliar</label>
+                        <input type="text" id="skill-text" class="form-control form-control-glass" placeholder="Ex: Avançado, Fluente, Intermediário">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-glass btn-glass-primary">Salvar Competência</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL 7: LANGUAGE MODAL ===== -->
+<div class="modal fade" id="addLanguageModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(10px);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-light" style="background:#0f172a; border: 1px solid var(--border-glass); border-radius:16px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="lang-modal-title"><i class="bi bi-plus-circle text-warning"></i> Novo Idioma</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="submitLanguageForm(event)">
+                <input type="hidden" id="lang-id-input">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Nome do Idioma</label>
+                        <input type="text" id="lang-name" class="form-control form-control-glass" placeholder="Ex: Inglês, Espanhol" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Proficiência Geral</label>
+                            <input type="text" id="lang-proficiency" class="form-control form-control-glass" placeholder="Ex: Native, B2, C1" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Ordenação</label>
+                            <input type="number" id="lang-order" class="form-control form-control-glass" value="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Nível de Leitura</label>
+                        <input type="text" id="lang-reading" class="form-control form-control-glass" placeholder="Ex: Avançado, Fluente">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Nível de Escrita</label>
+                        <input type="text" id="lang-writing" class="form-control form-control-glass" placeholder="Ex: Avançado, Fluente">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Nível de Conversação</label>
+                        <input type="text" id="lang-speaking" class="form-control form-control-glass" placeholder="Ex: Avançado, Fluente">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-glass btn-glass-primary">Salvar Idioma</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL 8: CERTIFICATION MODAL ===== -->
+<div class="modal fade" id="addCertificationModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(10px);">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content text-light" style="background:#0f172a; border: 1px solid var(--border-glass); border-radius:16px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="cert-modal-title"><i class="bi bi-plus-circle text-success"></i> Nova Certificação</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="submitCertificationForm(event)">
+                <input type="hidden" id="cert-id-input">
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Título da Certificação</label>
+                            <input type="text" id="cert-title" class="form-control form-control-glass" placeholder="Ex: CS50x — Introduction to Computer Science" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Emissor</label>
+                            <input type="text" id="cert-issuer" class="form-control form-control-glass" placeholder="Ex: Harvard University / edX" required>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Data de Emissão (Date Issued)</label>
+                            <input type="text" id="cert-date" class="form-control form-control-glass" placeholder="Ex: Dezembro 2024" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Índice de Ordenação</label>
+                            <input type="number" id="cert-order" class="form-control form-control-glass" value="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">ID da Credencial</label>
+                        <input type="text" id="cert-credential-id" class="form-control form-control-glass" placeholder="Ex: 8a93e827df1b...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">URL da Credencial (Verification URL)</label>
+                        <input type="url" id="cert-credential-url" class="form-control form-control-glass" placeholder="Ex: https://credentials.edx.org/...">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-glass btn-glass-primary">Salvar Certificação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL 9: PROJECT MODAL ===== -->
+<div class="modal fade" id="addProjectModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(10px);">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content text-light" style="background:#0f172a; border: 1px solid var(--border-glass); border-radius:16px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="project-modal-title"><i class="bi bi-plus-circle text-primary"></i> Novo Projeto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="submitProjectForm(event)">
+                <input type="hidden" id="project-id-input">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Título do Projeto</label>
+                        <input type="text" id="project-title" class="form-control form-control-glass" placeholder="Ex: Michel's Travel Platform" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Descrição Curta (Short Description)</label>
+                        <input type="text" id="project-short-desc" class="form-control form-control-glass" placeholder="Ex: Full-stack flight booking system with React and Node.js" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Stack Tecnológica (Tech Stack - separadas por vírgula)</label>
+                        <input type="text" id="project-stack" class="form-control form-control-glass" placeholder="Ex: React, Node.js, Drizzle ORM, Zod, Tailwind">
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">GitHub URL</label>
+                            <input type="url" id="project-github" class="form-control form-control-glass" placeholder="Ex: https://github.com/...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Live Demo URL</label>
+                            <input type="url" id="project-live" class="form-control form-control-glass" placeholder="Ex: https://michelstravel.com">
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Ordenação</label>
+                            <input type="number" id="project-order" class="form-control form-control-glass" value="0">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check form-switch form-switch-glass mt-4">
+                                <input class="form-check-input" type="checkbox" id="project-is-public" checked>
+                                <label class="form-check-label small text-muted ms-1" for="project-is-public">Tornar projeto visível no Currículo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Detalhamento Técnico (Detailed Description)</label>
+                        <textarea id="project-detailed-desc" class="form-control form-control-glass" rows="4" placeholder="Detalhes de arquitetura, Leis de Engenharia aplicadas, etc..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-glass btn-glass-primary">Salvar Projeto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL 10: HUMAN VALUE MODAL ===== -->
+<div class="modal fade" id="addValueModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(10px);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-light" style="background:#0f172a; border: 1px solid var(--border-glass); border-radius:16px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold" id="value-modal-title"><i class="bi bi-plus-circle text-danger"></i> Novo Princípio / Valor</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="submitValueForm(event)">
+                <input type="hidden" id="value-id-input">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Nome do Princípio / Valor</label>
+                        <input type="text" id="value-name" class="form-control form-control-glass" placeholder="Ex: Resiliência, Transparência" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Ícone (Bootstrap Icon Class)</label>
+                            <input type="text" id="value-icon" class="form-control form-control-glass" placeholder="Ex: bi-heart-fill, bi-star" value="bi-heart-fill" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label form-label-glass">Ordenação</label>
+                            <input type="number" id="value-order" class="form-control form-control-glass" value="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label form-label-glass">Descrição Detalhada do Caráter</label>
+                        <textarea id="value-description" class="form-control form-control-glass" rows="4" placeholder="Explique como este dogma ou valor humano direciona suas ações..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-glass btn-glass-primary">Salvar Princípio</button>
                 </div>
             </form>
         </div>

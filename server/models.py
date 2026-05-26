@@ -15,6 +15,12 @@ class Profile(Base):
     dogma1 = Column(Text)
     dogma2 = Column(Text)
     dogma3 = Column(Text)
+    
+    # New fields for extensive cataloging
+    hobbies = Column(Text, nullable=True)
+    languages_spoken = Column(Text, nullable=True)
+    availability = Column(String, nullable=True) # e.g. "Remoto, Relocation"
+    target_role_types = Column(String, nullable=True)
 
 class Experience(Base):
     __tablename__ = "experiences"
@@ -24,6 +30,13 @@ class Experience(Base):
     location = Column(String)
     date_range = Column(String)
     description = Column(Text)
+    
+    # New deep fields
+    achievements = Column(Text, nullable=True) # markdown bullet points
+    tools_used = Column(String, nullable=True) # comma separated
+    team_size = Column(Integer, nullable=True)
+    budget_managed = Column(String, nullable=True)
+    
     order_index = Column(Integer, default=0)
 
 class Education(Base):
@@ -33,6 +46,12 @@ class Education(Base):
     institution = Column(String)
     date_range = Column(String)
     description = Column(Text)
+    
+    # New deep fields
+    coursework = Column(Text, nullable=True)
+    thesis = Column(String, nullable=True)
+    gpa_honors = Column(String, nullable=True)
+    
     order_index = Column(Integer, default=0)
 
 class Skill(Base):
@@ -40,8 +59,8 @@ class Skill(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     category = Column(String) # 'tech', 'core', 'language', 'certification'
-    level_percent = Column(Integer, nullable=True) # Used for languages
-    level_text = Column(String, nullable=True) # Used for languages
+    level_percent = Column(Integer, nullable=True) 
+    level_text = Column(String, nullable=True) 
     order_index = Column(Integer, default=0)
 
 class BusinessMetric(Base):
@@ -49,8 +68,8 @@ class BusinessMetric(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     value = Column(Integer)
-    unit = Column(String) # ex: "$", "voos", "chamados"
-    category = Column(String) # ex: "Travel", "Logistics"
+    unit = Column(String) 
+    category = Column(String) 
     is_public = Column(Boolean, default=False)
     order_index = Column(Integer, default=0)
 
@@ -58,11 +77,11 @@ class AcademicResearch(Base):
     __tablename__ = "academic_researches"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
-    publisher = Column(String) # ex: "Zenodo", "Harvard"
-    doi = Column(String, index=True, nullable=True) # ex: "10.5281/zenodo.12345"
+    publisher = Column(String) 
+    doi = Column(String, index=True, nullable=True) 
     date_published = Column(String)
     abstract = Column(Text)
-    url = Column(String) # ex: Zenodo PDF url
+    url = Column(String) 
     is_public = Column(Boolean, default=False)
     order_index = Column(Integer, default=0)
 
@@ -71,5 +90,49 @@ class HumanValue(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     description = Column(Text)
-    icon = Column(String, default="bi-heart-fill") # Bootstrap icon class
+    icon = Column(String, default="bi-heart-fill") 
+    order_index = Column(Integer, default=0)
+
+# ----- NEW TABLES FOR EXHAUSTIVE HUB -----
+
+class Project(Base):
+    __tablename__ = "projects"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    short_description = Column(String)
+    detailed_description = Column(Text, nullable=True)
+    tech_stack = Column(String, nullable=True)
+    github_url = Column(String, nullable=True)
+    live_demo_url = Column(String, nullable=True)
+    is_public = Column(Boolean, default=False)
+    order_index = Column(Integer, default=0)
+
+class Language(Base):
+    __tablename__ = "languages"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    proficiency = Column(String) 
+    reading_level = Column(String, nullable=True)
+    writing_level = Column(String, nullable=True)
+    speaking_level = Column(String, nullable=True)
+    order_index = Column(Integer, default=0)
+
+class Certification(Base):
+    __tablename__ = "certifications"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    issuer = Column(String)
+    date_issued = Column(String)
+    credential_id = Column(String, nullable=True)
+    credential_url = Column(String, nullable=True)
+    order_index = Column(Integer, default=0)
+
+class VolunteerWork(Base):
+    __tablename__ = "volunteer_work"
+    id = Column(Integer, primary_key=True, index=True)
+    role = Column(String)
+    organization = Column(String)
+    date_range = Column(String)
+    description = Column(Text)
+    impact = Column(Text, nullable=True)
     order_index = Column(Integer, default=0)

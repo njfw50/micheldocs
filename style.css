@@ -266,3 +266,260 @@ body {
 .dept-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
 .dept-title { font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; }
 .dept-desc { font-size: 0.9rem; color: var(--text-desc); line-height: 1.5; }
+
+/* ===== 13. SPLASH SCREEN ===== */
+#splash-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: var(--primary);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
+}
+.splash-content {
+    text-align: center;
+    color: #fff;
+    animation: splashPop 1s ease-out forwards;
+}
+.splash-title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    letter-spacing: -1px;
+}
+.splash-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.8;
+    margin-bottom: 2rem;
+}
+.splash-loader {
+    width: 60px;
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
+.splash-loader::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 30%; height: 100%;
+    background: #fff;
+    border-radius: 4px;
+    animation: loadingBar 1.5s infinite ease-in-out;
+}
+
+@keyframes loadingBar {
+    0% { left: -30%; }
+    100% { left: 100%; }
+}
+@keyframes splashPop {
+    0% { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* ===== 14. PORTAL HERO ===== */
+.portal-hero {
+    animation: slideUp 0.8s ease-out;
+}
+.portal-avatar-wrapper {
+    position: relative;
+    display: inline-block;
+}
+.portal-avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--bg-card);
+    position: relative;
+    z-index: 2;
+}
+.portal-avatar-glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 160px; height: 160px;
+    background: var(--accent);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    filter: blur(20px);
+    opacity: 0.4;
+    z-index: 1;
+    animation: pulseGlow 3s infinite alternate;
+}
+@keyframes pulseGlow {
+    0% { opacity: 0.2; transform: translate(-50%, -50%) scale(0.9); }
+    100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.1); }
+}
+@keyframes slideUp {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.portal-headline { letter-spacing: -1.5px; }
+.portal-card {
+    display: flex; flex-direction: column; justify-content: space-between;
+}
+.portal-card-btn {
+    display: inline-block;
+    margin-top: 1.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    transition: all 0.3s;
+}
+.portal-card:hover .portal-card-btn {
+    background: var(--accent);
+    color: #fff;
+    transform: translateX(5px);
+}
+.portal-card:hover .portal-card-btn.border-danger {
+    background: var(--bs-danger);
+    color: #fff;
+}
+
+/* ===== 15. CHATBOT UI (LLAMA 3 INTEGRAÇÃO) ===== */
+#chatbot-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 6rem; /* Ao lado do botão de tema */
+    z-index: 1050;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1.5rem;
+    box-shadow: var(--shadow-card);
+    cursor: pointer;
+    transition: transform 0.2s, background-color var(--transition-speed);
+}
+#chatbot-button:hover {
+    transform: scale(1.1);
+    background: var(--primary);
+}
+
+.chatbot-window {
+    position: fixed;
+    bottom: 6.5rem;
+    right: 2rem;
+    width: 350px;
+    height: 480px;
+    z-index: 1050;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUpChat 0.3s ease-out;
+}
+[data-theme="dark"] .chatbot-window {
+    background: rgba(15, 23, 42, 0.85);
+}
+
+@keyframes slideUpChat {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.chatbot-header {
+    background: var(--header-grad);
+    color: #fff;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chatbot-messages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    background: transparent;
+}
+
+.chat-msg {
+    max-width: 85%;
+    padding: 0.6rem 0.85rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    word-wrap: break-word;
+}
+.bot-msg {
+    align-self: flex-start;
+    background: var(--dogma-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+}
+.user-msg {
+    align-self: flex-end;
+    background: var(--accent);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+.bot-typing {
+    align-self: flex-start;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-style: italic;
+    background: transparent;
+    padding: 0;
+    animation: pulse 1s infinite alternate;
+}
+
+.chatbot-input {
+    display: flex;
+    padding: 0.75rem;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+}
+.chatbot-input input {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: var(--dogma-bg);
+    color: var(--text-main);
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color var(--transition-speed);
+}
+.chatbot-input input:focus {
+    border-color: var(--accent);
+}
+.chatbot-input button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    margin-left: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+.chatbot-input button:hover {
+    background: var(--primary);
+    transform: scale(1.05);
+}

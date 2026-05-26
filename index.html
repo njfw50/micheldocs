@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PROTEÇÃO CONTRA CACHE (DEV MODE) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <!-- SEO -->
     <title>Curriculum Vitae - Michel de Souza</title>
     <meta name="description" content="Curriculum Vitae of Michel de Souza — Software Engineer in career transition, CS50x Harvard, Full-Stack Developer, Travel & Hospitality background.">
@@ -12,9 +16,19 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body class="py-5">
+
+<!-- ===== 0. SPLASH SCREEN (BOAS-VINDAS) ===== -->
+<div id="splash-screen">
+    <div class="splash-content">
+        <h1 class="splash-title">Michel de Souza</h1>
+        <p class="splash-subtitle">Engenharia, Dados & Resolução de Problemas</p>
+        <div class="splash-loader"></div>
+    </div>
+</div>
+
 <!-- Botão flutuante para controle de tema (Dark/Light) com micro-animação no hover -->
 <div id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" role="button">
     <i class="bi bi-moon-stars"></i>
@@ -29,28 +43,38 @@
         <a href="#values" class="btn btn-sm btn-outline-secondary rounded-pill px-3">❤️ Valores Humanos</a>
     </nav>
 
-    <!-- ===== SPA VIEW: HOME ===== -->
+    <!-- ===== SPA VIEW: HOME (PORTAL DE CONTRATAÇÃO) ===== -->
     <div id="view-home" class="spa-view">
-        <div class="text-center py-5">
-            <h1 class="display-5 fw-bold" style="color: var(--primary);">Bem-vindo ao Meu Universo Profissional</h1>
-            <p class="lead" style="color: var(--text-desc);">Escolha um departamento para explorar minha trajetória, métricas e princípios.</p>
+        <div class="text-center py-5 portal-hero">
+            <!-- Foto do Michel em destaque -->
+            <div class="portal-avatar-wrapper mb-4">
+                <img src="https://scontent-lga3-2.xx.fbcdn.net/v/t39.30808-1/680351558_35213996131578073_8785402727836984375_n.jpg?stp=dst-jpg_tt6&amp;cstp=mx880x878&amp;ctp=s720x720&amp;_nc_cat=101&amp;ccb=1-7&amp;_nc_sid=3ab345&amp;_nc_ohc=Kl4u8reMEX0Q7kNvwELudnq&amp;_nc_oc=AdoK6pYX9Rgej27JgZ9PHLfsBB46fyWGjQxI4u89kM1kaDRA28b_fv2BRO9hD1yTJMSzcrC0l3OIJ4cCKIU42Aa4&amp;_nc_zt=24&amp;_nc_ht=scontent-lga3-2.xx&amp;_nc_gid=gu4bK-C8FZvYDjzbsE4IWQ&amp;_nc_ss=7f20f&amp;oh=00_Af4REOj3z5d3qWgk2sGOhJxq8m14IboROFAVoBrWe16Grw&amp;oe=6A1583A8" alt="Michel de Souza" class="portal-avatar shadow-lg">
+                <div class="portal-avatar-glow"></div>
+            </div>
             
-            <div class="row g-4 mt-4 justify-content-center">
+            <h1 class="display-4 fw-bold portal-headline" style="color: var(--primary);">Bem-vindo.</h1>
+            <p class="lead mt-3 portal-subtitle" style="color: var(--text-desc); max-width: 600px; margin: 0 auto;">
+                Você chegou ao lugar certo para aprender, avaliar e tomar a decisão sobre a contratação de <strong>Michel de Souza</strong>.
+            </p>
+            
+            <div class="row g-4 mt-5 justify-content-center">
                 <div class="col-md-5">
-                    <a href="#resume" class="text-decoration-none">
-                        <div class="dept-card">
+                    <a href="#resume" class="text-decoration-none" onclick="triggerNav()">
+                        <div class="dept-card portal-card">
                             <i class="bi bi-briefcase-fill dept-icon text-primary"></i>
-                            <h3 class="dept-title">Currículo Profissional</h3>
-                            <p class="dept-desc">Explore minha experiência, educação e proficiência técnica consolidada.</p>
+                            <h3 class="dept-title">Dados Naturais & Experiência</h3>
+                            <p class="dept-desc">Explore minha trajetória, frameworks e impacto técnico em detalhes.</p>
+                            <span class="portal-card-btn">Acessar Currículo <i class="bi bi-arrow-right"></i></span>
                         </div>
                     </a>
                 </div>
                 <div class="col-md-5">
-                    <a href="#values" class="text-decoration-none">
-                        <div class="dept-card">
+                    <a href="#values" class="text-decoration-none" onclick="triggerNav()">
+                        <div class="dept-card portal-card">
                             <i class="bi bi-heart-pulse-fill dept-icon text-danger"></i>
-                            <h3 class="dept-title">Valores Humanos</h3>
-                            <p class="dept-desc">Conheça os princípios inegociáveis que norteiam minhas decisões e carreira.</p>
+                            <h3 class="dept-title">Conheça Meus Valores</h3>
+                            <p class="dept-desc">Os dogmas inegociáveis e o caráter por trás de cada linha de código.</p>
+                            <span class="portal-card-btn text-danger border-danger">Ver Princípios <i class="bi bi-arrow-right"></i></span>
                         </div>
                     </a>
                 </div>
@@ -241,6 +265,14 @@
                     </div>
                 </section>
 
+                <!-- Volunteer Work -->
+                <section class="mb-4 d-none" id="volunteer-section">
+                    <h2 class="section-title">Volunteer Work & Social Impact</h2>
+                    <div id="volunteer-list">
+                        <!-- Injetado dinamicamente -->
+                    </div>
+                </section>
+
                 <!-- ===== BUSINESS ANALYTICS SECTION (DATA ANALYSIS FOCUS) ===== -->
                 <section class="mb-4 d-none" id="analytics-section">
                     <h2 class="section-title">Professional Impact & Business Analytics</h2>
@@ -346,13 +378,11 @@
                     </ul>
                 </section>
 
-                <!-- Key Project -->
-                <section class="mb-4">
-                    <h2 class="section-title">Main Project</h2>
-                    <div style="background:var(--dogma-bg); border-radius:8px; padding:.85rem; font-size:.82rem; color:var(--text-desc); border:1px solid var(--border); transition: background var(--transition-speed), border-color var(--transition-speed);">
-                        <div style="font-weight:600; color:var(--primary); margin-bottom:.35rem; transition: color var(--transition-speed);">✈️ Michel's Travel Platform</div>
-                        Full-stack flight booking system built with React, Node.js, Drizzle ORM, Zod, and Tailwind CSS. 
-                        Implements all Canonical Laws (DOGMAs) for robustness, security and scalability.
+                <!-- Featured Projects -->
+                <section class="mb-4 d-none" id="projects-section">
+                    <h2 class="section-title">Featured Projects</h2>
+                    <div id="projects-list" class="d-flex flex-column gap-3">
+                        <!-- Injetado dinamicamente -->
                     </div>
                 </section>
 
@@ -385,6 +415,33 @@
 
 </div><!-- /container -->
 
+<!-- ===== CHATBOT UI ===== -->
+<div id="chatbot-button" onclick="toggleChatbot()" role="button" aria-label="Abrir Chatbot">
+    <i class="bi bi-chat-dots-fill"></i>
+</div>
+
+<div id="chatbot-window" class="chatbot-window d-none">
+    <div class="chatbot-header">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-robot me-2" style="font-size: 1.2rem;"></i>
+            <div>
+                <h6 class="mb-0 fw-bold">Michel AI</h6>
+                <small style="font-size: 0.7rem; opacity: 0.8;">Assistente LLaMA 3</small>
+            </div>
+        </div>
+        <button class="btn-close btn-close-white" onclick="toggleChatbot()" aria-label="Fechar"></button>
+    </div>
+    <div class="chatbot-messages" id="chatbot-messages">
+        <div class="chat-msg bot-msg">
+            Olá! Sou o assistente de IA do Michel. Estou aqui para responder qualquer dúvida sobre suas experiências, habilidades e projetos. Como posso te ajudar hoje?
+        </div>
+    </div>
+    <div class="chatbot-input">
+        <input type="text" id="chat-input" placeholder="Pergunte algo..." onkeypress="handleChatKeyPress(event)">
+        <button onclick="sendChatMessage()"><i class="bi bi-send-fill"></i></button>
+    </div>
+</div>
+
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 
@@ -393,6 +450,6 @@
 
 <!-- Script dinâmico com lógica de controle de tema e integração à API robusta (Fallback Silencioso) -->
 <!-- Lógica de apresentação desacoplada em conformidade com as Leis de Camadas -->
-<script src="script.js" defer></script>
+<script src="script.js?v=2" defer></script>
 </body>
 </html>

@@ -54,6 +54,21 @@ function toggleTheme() {
     applyTheme(newTheme);
 }
 
+// --- DYNAMIC API CONFIGURATION ---
+/**
+ * Detecta a URL base correta da API.
+ * Se a página estiver hospedada no próprio servidor FastAPI (localhost:8000), usa caminhos relativos.
+ * Se for aberta via file:// ou outro servidor local de desenvolvimento (ex: Live Server, Webview),
+ * aponta diretamente para o servidor FastAPI em http://127.0.0.1:8000.
+ */
+function getApiBase() {
+    const origin = window.location.origin;
+    if (origin.includes('127.0.0.1:8000') || origin.includes('localhost:8000')) {
+        return '';
+    }
+    return 'http://127.0.0.1:8000';
+}
+
 // --- INTEGRAÇÃO COM BACKEND FASTAPI (CAMADA DE SERVIÇO) ---
 
 /**
@@ -61,8 +76,8 @@ function toggleTheme() {
  * Em caso de sucesso, atualiza o DOM; caso falhe, ativa o Fallback Silencioso (UI resiliente).
  */
 async function fetchCVData() {
-    // Path relativo robusto para hospedar no mesmo domínio
-    const API_URL = '/api/cv';
+    // Path dinâmico robusto de acordo com a origem do servidor (Lei 9 e 14)
+    const API_URL = getApiBase() + '/api/cv';
     
     try {
         const response = await fetch(API_URL);
@@ -131,6 +146,10 @@ function updateUI(data) {
         if (p.summary) {
             document.getElementById('profile-summary').innerText = p.summary;
         }
+        if (p.location) {
+            const locChip = document.getElementById('profile-location-chip-text');
+            if (locChip) locChip.innerText = p.location;
+        }
         
         // Dogmas do Profissional
         const dogmaContainer = document.getElementById('dogma-container');
@@ -184,16 +203,14 @@ function updateUI(data) {
     }
 
     // 4. Histórico de Habilidades e Competências
+    const techSkillsContainer = document.getElementById('tech-skills');
+    const coreSkillsContainer = document.getElementById('core-skills');
+    const languageContainer = document.getElementById('language-list');
+    const certificationContainer = document.getElementById('certification-list');
+
     if (data.skills && data.skills.length > 0) {
-        const techSkillsContainer = document.getElementById('tech-skills');
-        const coreSkillsContainer = document.getElementById('core-skills');
-        const languageContainer = document.getElementById('language-list');
-        const certificationContainer = document.getElementById('certification-list');
-        
         const techSkills = data.skills.filter(s => s.category === 'tech').sort((a, b) => a.order_index - b.order_index);
         const coreSkills = data.skills.filter(s => s.category === 'core').sort((a, b) => a.order_index - b.order_index);
-        const languages = data.skills.filter(s => s.category === 'language').sort((a, b) => a.order_index - b.order_index);
-        const certifications = data.skills.filter(s => s.category === 'certification').sort((a, b) => a.order_index - b.order_index);
         
         if (techSkillsContainer && techSkills.length > 0) {
             techSkillsContainer.innerHTML = techSkills.map(s => `
@@ -205,25 +222,122 @@ function updateUI(data) {
                 <span class="badge-skill">${escapeHTML(s.name)}</span>
             `).join('');
         }
-        if (languageContainer && languages.length > 0) {
-            languageContainer.innerHTML = languages.map(s => `
-                <div class="lang-wrap">
-                    <div class="d-flex justify-content-between">
-                        <span class="lang-label">${escapeHTML(s.name)}</span>
-                        <span class="lang-sub">${escapeHTML(s.level_text || '')}</span>
+    }
+
+    // Idiomas (Suporta tabela própria com fallback para skills de categoria language)
+    if (languageContainer) {
+        if (data.languages && data.languages.length > 0) {
+            const sortedLangs = [...data.languages].sort((a, b) => a.order_index - b.order_index);
+            languageContainer.innerHTML = sortedLangs.map(l => {
+                // Mapeamento simples de nível para barra de progresso aproximada
+                let percent = 50;
+                const prof = l.proficiency.toLowerCase();
+                if (prof.includes('native') || prof.includes('nativo') || prof.includes('c2')) percent = 100;
+                else if (prof.includes('c1') || prof.includes('fluent') || prof.includes('fluente')) percent = 90;
+                else if (prof.includes('b2') || prof.includes('intermediate') || prof.includes('intermediário')) percent = 75;
+                else if (prof.includes('b1')) percent = 60;
+                else if (prof.includes('a2')) percent = 45;
+                else if (prof.includes('a1')) percent = 30;
+                
+                return `
+                    <div class="lang-wrap">
+                        <div class="d-flex justify-content-between">
+                            <span class="lang-label">${escapeHTML(l.name)}</span>
+                            <span class="lang-sub">${escapeHTML(l.proficiency)}</span>
+                        </div>
+                        <div class="lang-track"><div class="lang-fill" style="width:${percent}%"></div></div>
                     </div>
-                    <div class="lang-track"><div class="lang-fill" style="width:${s.level_percent || 0}%"></div></div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        } else if (data.skills) {
+            const languages = data.skills.filter(s => s.category === 'language').sort((a, b) => a.order_index - b.order_index);
+            if (languages.length > 0) {
+                languageContainer.innerHTML = languages.map(s => `
+                    <div class="lang-wrap">
+                        <div class="d-flex justify-content-between">
+                            <span class="lang-label">${escapeHTML(s.name)}</span>
+                            <span class="lang-sub">${escapeHTML(s.level_text || '')}</span>
+                        </div>
+                        <div class="lang-track"><div class="lang-fill" style="width:${s.level_percent || 0}%"></div></div>
+                    </div>
+                `).join('');
+            }
         }
-        if (certificationContainer && certifications.length > 0) {
-            certificationContainer.innerHTML = certifications.map(s => `
-                <li class="mb-2"><i class="bi bi-patch-check-fill text-primary me-2"></i>${escapeHTML(s.name)}</li>
+    }
+
+    // Certificações (Suporta tabela própria com fallback para skills de categoria certification)
+    if (certificationContainer) {
+        if (data.certifications && data.certifications.length > 0) {
+            const sortedCerts = [...data.certifications].sort((a, b) => a.order_index - b.order_index);
+            certificationContainer.innerHTML = sortedCerts.map(c => `
+                <li class="mb-2">
+                    <i class="bi bi-patch-check-fill text-primary me-2"></i>
+                    ${c.credential_url ? `<a href="${escapeHTML(c.credential_url)}" target="_blank" class="text-decoration-none text-reset hover-primary">` : ''}
+                    <strong>${escapeHTML(c.title)}</strong> — ${escapeHTML(c.issuer)}
+                    ${c.credential_url ? `</a>` : ''}
+                    <span class="small text-muted d-block ms-4" style="font-size: 0.72rem;">Conclusão: ${escapeHTML(c.date_issued)}</span>
+                </li>
+            `).join('');
+        } else if (data.skills) {
+            const certifications = data.skills.filter(s => s.category === 'certification').sort((a, b) => a.order_index - b.order_index);
+            if (certifications.length > 0) {
+                certificationContainer.innerHTML = certifications.map(s => `
+                    <li class="mb-2"><i class="bi bi-patch-check-fill text-primary me-2"></i>${escapeHTML(s.name)}</li>
+                `).join('');
+            }
+        }
+    }
+
+    // 5. Projetos Práticos & Portfólio Dinâmico
+    const projectsSection = document.getElementById('projects-section');
+    const projectsList = document.getElementById('projects-list');
+    if (projectsSection && projectsList && data.projects && data.projects.length > 0) {
+        const publicProjects = data.projects.filter(p => p.is_public == true).sort((a, b) => a.order_index - b.order_index);
+        if (publicProjects.length > 0) {
+            projectsSection.classList.remove('d-none');
+            projectsList.innerHTML = publicProjects.map(p => `
+                <div style="background:var(--dogma-bg); border-radius:8px; padding:.85rem; font-size:.82rem; color:var(--text-desc); border:1px solid var(--border); transition: background var(--transition-speed), border-color var(--transition-speed);">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div style="font-weight:600; color:var(--primary); transition: color var(--transition-speed);">${escapeHTML(p.title)}</div>
+                        <div class="small d-flex gap-2">
+                            ${p.github_url ? `<a href="${escapeHTML(p.github_url)}" target="_blank" class="text-primary" style="font-size: 1rem;"><i class="bi bi-github"></i></a>` : ''}
+                            ${p.live_demo_url ? `<a href="${escapeHTML(p.live_demo_url)}" target="_blank" class="text-success" style="font-size: 1rem;"><i class="bi bi-link-45deg"></i></a>` : ''}
+                        </div>
+                    </div>
+                    <p class="mb-2" style="font-size: 0.78rem;">${escapeHTML(p.short_description)}</p>
+                    ${p.tech_stack ? `
+                        <div class="mb-1">
+                            ${p.tech_stack.split(',').map(s => `<span class="badge bg-secondary bg-opacity-25 text-light font-monospace me-1" style="font-size: 0.65rem;">${escapeHTML(s.trim())}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    ${p.detailed_description ? `<div class="text-muted mt-1 small" style="font-size: 0.74rem;">${escapeHTML(p.detailed_description)}</div>` : ''}
+                </div>
             `).join('');
         }
     }
 
-    // 5. Atualizar Métricas e Gráfico de Impacto Profissional (Analytics - Data Focus)
+    // 6. Trabalho Voluntário & Impacto Social Dinâmico
+    const volunteerSection = document.getElementById('volunteer-section');
+    const volunteerList = document.getElementById('volunteer-list');
+    if (volunteerSection && volunteerList && data.volunteer_work && data.volunteer_work.length > 0) {
+        const sortedVol = [...data.volunteer_work].sort((a, b) => a.order_index - b.order_index);
+        if (sortedVol.length > 0) {
+            volunteerSection.classList.remove('d-none');
+            volunteerList.innerHTML = sortedVol.map(vol => `
+                <div class="tl-item mb-3">
+                    <div class="tl-title">${escapeHTML(vol.role)}</div>
+                    <div class="tl-company">${escapeHTML(vol.organization)}</div>
+                    <div class="tl-date">
+                        <i class="bi bi-calendar3 me-1"></i>${escapeHTML(vol.date_range)}
+                    </div>
+                    <div class="tl-desc mt-1">${escapeHTML(vol.description)}</div>
+                    ${vol.impact ? `<div class="text-success small mt-1 font-monospace" style="font-size: 0.78rem;"><i class="bi bi-rocket-takeoff me-1"></i>Impacto: ${escapeHTML(vol.impact)}</div>` : ''}
+                </div>
+            `).join('');
+        }
+    }
+
+    // 7. Atualizar Métricas e Gráfico de Impacto Profissional (Analytics - Data Focus)
     const analyticsSection = document.getElementById('analytics-section');
     const cardsContainer = document.getElementById('metric-cards-container');
     const chartCanvas = document.getElementById('publicMetricsChart');
@@ -276,7 +390,7 @@ function updateUI(data) {
         }
     }
 
-    // 6. Atualizar Produções e Pesquisas Científicas (Academic Registry)
+    // 8. Atualizar Produções e Pesquisas Científicas (Academic Registry)
     const researchSection = document.getElementById('research-section');
     const researchList = document.getElementById('research-list');
     
@@ -312,7 +426,7 @@ function updateUI(data) {
         `).join('');
     }
 
-    // 7. Atualizar Valores Humanos
+    // 9. Atualizar Valores Humanos
     const valuesList = document.getElementById('values-list');
     if (valuesList && data.human_values && data.human_values.length > 0) {
         const sortedValues = [...data.human_values].sort((a, b) => a.order_index - b.order_index);
@@ -382,6 +496,10 @@ function handleRoute() {
 
 window.addEventListener('hashchange', handleRoute);
 
+function triggerNav() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 // --- DYNAMIC CURRICULUM FILTERING (EMPLOYER VIEW) ---
 function applyProfileFilter(profile) {
     const feedback = document.getElementById('filter-feedback');
@@ -418,4 +536,82 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Consulta assíncrona ao banco de dados do currículo
     fetchCVData();
+
+    // Lógica do Splash Screen
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+        // Remove the splash screen after 2 seconds
+        setTimeout(() => {
+            splash.style.opacity = '0';
+            splash.style.visibility = 'hidden';
+        }, 2000);
+    }
 });
+
+// --- CHATBOT (LLAMA 3 RAG) LOGIC ---
+function toggleChatbot() {
+    const chatWindow = document.getElementById('chatbot-window');
+    chatWindow.classList.toggle('d-none');
+}
+
+function handleChatKeyPress(event) {
+    if (event.key === 'Enter') {
+        sendChatMessage();
+    }
+}
+
+async function sendChatMessage() {
+    const inputEl = document.getElementById('chat-input');
+    const msg = inputEl.value.trim();
+    if (!msg) return;
+
+    // Adiciona a mensagem do usuário na tela
+    appendChatMessage(msg, 'user-msg');
+    inputEl.value = '';
+
+    // Adiciona o indicador de 'digitando' do bot
+    const typingId = 'typing-' + Date.now();
+    appendChatMessage('Analisando currículo...', 'bot-typing', typingId);
+
+    try {
+        const response = await fetch(getApiBase() + '/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg })
+        });
+
+        const data = await response.json();
+        
+        // Remove o indicador de digitando
+        const typingEl = document.getElementById(typingId);
+        if (typingEl) typingEl.remove();
+
+        if (response.ok) {
+            appendChatMessage(data.response, 'bot-msg');
+        } else {
+            appendChatMessage('Desculpe, ocorreu um erro ao contactar a IA.', 'bot-msg text-danger');
+            console.error('Chat API Error:', data.detail);
+        }
+
+    } catch (error) {
+        // Remove o indicador de digitando
+        const typingEl = document.getElementById(typingId);
+        if (typingEl) typingEl.remove();
+        
+        appendChatMessage('Erro de conexão. A inteligência artificial (Ollama) pode estar offline.', 'bot-msg text-danger');
+        console.error('Fetch error:', error);
+    }
+}
+
+function appendChatMessage(text, className, id = null) {
+    const chatContainer = document.getElementById('chatbot-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-msg ${className}`;
+    if (id) msgDiv.id = id;
+    
+    // Tratamento de conversão de quebras de linha para HTML (Mantendo a segurança)
+    msgDiv.innerHTML = escapeHTML(text).replace(/\n/g, '<br>');
+    
+    chatContainer.appendChild(msgDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
