@@ -71,6 +71,9 @@ function getApiBase() {
 
 // --- INTEGRAÇÃO COM BACKEND FASTAPI (CAMADA DE SERVIÇO) ---
 
+// Estado global para RAG e processamento de IA embarcada local (window.ai)
+let cvDataGlobal = null;
+
 /**
  * Consulta a API local do FastAPI em busca das últimas atualizações da base de dados.
  * Em caso de sucesso, atualiza o DOM; caso falhe, ativa o Fallback Silencioso (UI resiliente).
@@ -86,8 +89,10 @@ async function fetchCVData() {
         }
         const data = await response.json();
         if (data) {
+            cvDataGlobal = data; // Armazena globalmente em memória para o RAG local do window.ai
             updateUI(data);
             console.log("Sucesso: Currículo atualizado dinamicamente via base de dados local.");
+            detectAndNotifyEmbeddedAI();
         }
     } catch (error) {
         // FALLBACK SILENCIOSO (Arquitetura Defensiva):
@@ -560,6 +565,72 @@ function handleChatKeyPress(event) {
     }
 }
 
+/**
+ * RAG Context Builder no lado do cliente para a IA Embarcada (window.ai)
+ */
+function buildClientRAGContext(data) {
+    if (!data) return "";
+    let context = "";
+    
+    if (data.profile) {
+        const p = data.profile;
+        context += `## Perfil Profissional\n- Nome: ${p.name}\n- Título: ${p.title}\n- Localização: ${p.location}\n- Resumo: ${p.summary}\n`;
+        if (p.dogma1 || p.dogma2 || p.dogma3) {
+            context += "- Dogmas de Engenharia:\n";
+            if (p.dogma1) context += `  * ${p.dogma1}\n`;
+            if (p.dogma2) context += `  * ${p.dogma2}\n`;
+            if (p.dogma3) context += `  * ${p.dogma3}\n`;
+        }
+        if (p.availability) context += `- Disponibilidade: ${p.availability}\n`;
+        if (p.target_role_types) context += `- Cargos Alvos: ${p.target_role_types}\n`;
+    }
+    
+    if (data.experiences && data.experiences.length > 0) {
+        context += "\n## Experiências Profissionais\n";
+        data.experiences.forEach(exp => {
+            context += `### ${exp.title} na ${exp.company} (${exp.date_range})\n`;
+            if (exp.description) context += `- Descrição: ${exp.description}\n`;
+            if (exp.achievements) context += `- Conquistas: ${exp.achievements}\n`;
+            if (exp.tools_used) context += `- Ferramentas: ${exp.tools_used}\n`;
+        });
+    }
+    
+    if (data.education && data.education.length > 0) {
+        context += "\n## Formação Acadêmica & Cursos\n";
+        data.education.forEach(edu => {
+            context += `### ${edu.title} na ${edu.institution} (${edu.date_range || 'N/A'})\n`;
+            if (edu.description) context += `- Detalhes: ${edu.description}\n`;
+            if (edu.gpa_honors) context += `- GPAs/Honras: ${edu.gpa_honors}\n`;
+        });
+    }
+    
+    if (data.skills && data.skills.length > 0) {
+        context += "\n## Competências & Habilidades\n";
+        const techSkills = data.skills.filter(s => s.category === 'tech').map(s => s.name);
+        const coreSkills = data.skills.filter(s => s.category === 'core').map(s => s.name);
+        if (techSkills.length > 0) context += `- Tech Stack: ${techSkills.join(', ')}\n`;
+        if (coreSkills.length > 0) context += `- Core Skills: ${coreSkills.join(', ')}\n`;
+    }
+
+    if (data.projects && data.projects.length > 0) {
+        context += "\n## Projetos Práticos & Portfólio\n";
+        data.projects.filter(p => p.is_public).forEach(p => {
+            context += `### Projeto: ${p.title}\n- Resumo: ${p.short_description}\n`;
+            if (p.tech_stack) context += `- Stack: ${p.tech_stack}\n`;
+        });
+    }
+    
+    return context;
+}
+
+function detectAndNotifyEmbeddedAI() {
+    const isLocalAIAvailable = (window.ai && (window.ai.assistant || window.ai.createTextSession));
+    if (isLocalAIAvailable) {
+        console.log("IA Embarcada (Gemini Nano) detectada com sucesso!");
+        appendChatMessage("🤖 <strong>Gemini Nano (IA Embarcada Local)</strong> detectado com sucesso no seu navegador! Suas respostas serão geradas localmente com aceleração de hardware 100% offline e privada.", "bot-msg text-success border-success-subtle bg-success-subtle bg-opacity-10");
+    }
+}
+
 async function sendChatMessage() {
     const inputEl = document.getElementById('chat-input');
     const msg = inputEl.value.trim();
@@ -573,6 +644,55 @@ async function sendChatMessage() {
     const typingId = 'typing-' + Date.now();
     appendChatMessage('Analisando currículo...', 'bot-typing', typingId);
 
+    // 1. TENTATIVA COM IA EMBARCADA LOCAL (window.ai) SE DISPONÍVEL
+    const isLocalAIAvailable = (window.ai && (window.ai.assistant || window.ai.createTextSession));
+    if (isLocalAIAvailable && cvDataGlobal) {
+        console.log("[Chatbot] Utilizando Inteligência Artificial Embarcada Local (window.ai)...");
+        try {
+            const context = buildClientRAGContext(cvDataGlobal);
+            const systemPrompt = `Você é o 'Michel AI', o assistente virtual inteligente, polido e experiente do currículo de Michel de Souza.
+Seu objetivo é responder a perguntas de recrutadores de forma precisa e extremamente educada.
+Você responderá às perguntas baseando-se EXCLUSIVAMENTE nas informações fornecidas no contexto do Michel abaixo.
+==================================================
+${context}
+==================================================
+Diretrizes:
+1. Adote um tom de engenharia premium, profissional e polido.
+2. Destaque a transição do Michel de turismo/hospitalidade de alto padrão para a Engenharia de Software com base no rigor de Harvard (CS50x).
+3. Se o visitante perguntar sobre algo ausente das informações do Michel, diga educadamente que não possui essa informação em sua memória.`;
+
+            let localResponse = "";
+            
+            // Nova API spec
+            if (window.ai.assistant) {
+                const session = await window.ai.assistant.create({
+                    systemPrompt: systemPrompt
+                });
+                localResponse = await session.prompt(msg);
+                session.destroy(); // Libera memória de GPU
+            } 
+            // Antiga API spec
+            else if (window.ai.createTextSession) {
+                const session = await window.ai.createTextSession({
+                    systemPrompt: systemPrompt
+                });
+                localResponse = await session.prompt(msg);
+                session.destroy();
+            }
+
+            // Remove o indicador de digitando
+            const typingEl = document.getElementById(typingId);
+            if (typingEl) typingEl.remove();
+
+            appendChatMessage(localResponse, 'bot-msg');
+            return; // Encerra com sucesso
+        } catch (localError) {
+            console.warn("[Chatbot] Falha ao executar window.ai local. Acionando fallback do servidor...", localError);
+            // Se falhar o window.ai local, continua e aciona o fallback do servidor abaixo
+        }
+    }
+
+    // 2. FALLBACK: CONSULTA AO SERVIDOR FASTAPI (GEMINI/OLLAMA RAG HYBRID)
     try {
         const response = await fetch(getApiBase() + '/api/chat', {
             method: 'POST',
@@ -603,14 +723,73 @@ async function sendChatMessage() {
     }
 }
 
+/**
+ * Converte notações de Markdown e HTML geradas pela IA local/remota em HTML seguro estruturado.
+ */
+function formatMarkdown(text) {
+    if (!text) return '';
+    // Escapa caracteres perigosos mantendo segurança XSS (Lei 14)
+    let html = escapeHTML(text);
+    
+    // Converte formatação em negrito: **texto** -> <strong>texto</strong>
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Converte formatação em itálico: *texto* -> <em>texto</em>
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+    
+    // Converte links markdown: [texto](url) -> <a>texto</a>
+    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-cyan">$1</a>');
+    
+    // Converte blocos de código inline: `código` -> <code>código</code>
+    html = html.replace(/`(.*?)`/g, '<code class="font-monospace">$1</code>');
+    
+    // Converte listas em bullet points
+    let lines = html.split('\n');
+    let inList = false;
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
+            let content = line.substring(1).trim();
+            if (!inList) {
+                lines[i] = '<ul class="mb-2 ps-3"><li>' + content + '</li>';
+                inList = true;
+            } else {
+                lines[i] = '<li>' + content + '</li>';
+            }
+        } else {
+            if (inList) {
+                lines[i] = '</ul>' + lines[i];
+                inList = false;
+            }
+        }
+    }
+    if (inList) {
+        lines[lines.length - 1] += '</ul>';
+    }
+    html = lines.join('\n');
+    
+    // Restaura quebras de linha
+    html = html.replace(/\n/g, '<br>');
+    
+    // Restaura tags seguras pré-escapadas enviadas pelo backend (ex: <strong> do co-piloto)
+    html = html.replace(/&lt;strong&gt;(.*?)&lt;\/strong&gt;/g, '<strong>$1</strong>');
+    html = html.replace(/&lt;em&gt;(.*?)&lt;\/em&gt;/g, '<em>$1</em>');
+    html = html.replace(/&lt;br&gt;/g, '<br>');
+    html = html.replace(/&lt;code&gt;(.*?)&lt;\/code&gt;/g, '<code>$1</code>');
+    html = html.replace(/&lt;a href=&quot;(.*?)&quot; target=&quot;_blank&quot; class=&quot;(.*?)&quot;&gt;(.*?)&lt;\/a&gt;/g, '<a href="$1" target="_blank" class="$2">$3</a>');
+
+    return html;
+}
+
 function appendChatMessage(text, className, id = null) {
     const chatContainer = document.getElementById('chatbot-messages');
     const msgDiv = document.createElement('div');
     msgDiv.className = `chat-msg ${className}`;
     if (id) msgDiv.id = id;
     
-    // Tratamento de conversão de quebras de linha para HTML (Mantendo a segurança)
-    msgDiv.innerHTML = escapeHTML(text).replace(/\n/g, '<br>');
+    // Usa o renderizador de Markdown e HTML higienizado inteligente
+    msgDiv.innerHTML = formatMarkdown(text);
     
     chatContainer.appendChild(msgDiv);
     chatContainer.scrollTop = chatContainer.scrollHeight;

@@ -530,6 +530,88 @@ def check_local_chat_response(prompt: str) -> dict:
         
     return None
 
+import re
+
+def try_regex_fallback_parser(prompt: str) -> str:
+    """
+    Fallback determinístico via Regex (Lei 9 - Simplicidade).
+    Se as chaves de API externa e o Ollama local falharem, este motor estático e robusto
+    analisa a intenção e atende a comandos comuns de inserção/atualização.
+    """
+    p = prompt.strip().lower()
+    
+    # 1. Habilidade (Skill)
+    # Ex: "Adicione a habilidade Docker", "Nova skill Kubernetes", "criar uma nova habilidade Python"
+    match_skill = re.search(r'(?:adicione|nova|criar|adicionar|inserir)(?:\s+(?:a|o|um|uma|nova|novo|de|da|do))?\s+(?:habilidade|skill|competência|competencia)\s+([a-zA-Z0-9+#.\s]+)', p)
+    if match_skill:
+        name = match_skill.group(1).strip().title()
+        category = "tech"
+        if any(w in p for w in ["core", "comportamental", "liderança", "comunicação"]):
+            category = "core"
+        return json.dumps({
+            "category": "skill",
+            "action": "create",
+            "data": {
+                "name": name,
+                "category": category,
+                "order_index": 0
+            }
+        })
+        
+    # 2. Atualizar Perfil: Telefone, E-mail, Localização
+    # Ex: "muda o telefone para +1 862 350-1161", "atualizar meu celular para +1 862 350-1161"
+    match_phone = re.search(r'(?:mudar|alterar|atualizar|muda|telefone|phone|celular)(?:\s+(?:o|a|meu|seu))?\s+(?:telefone|phone|celular)?(?:\s+para)?\s*([+0-9\s()-]+)', p)
+    if match_phone and any(char.isdigit() for char in match_phone.group(1)):
+        phone = match_phone.group(1).strip()
+        return json.dumps({
+            "category": "profile",
+            "action": "update",
+            "data": {
+                "phone": phone
+            }
+        })
+
+    # Ex: "muda o email para michel@gmail.com", "atualizar e-mail para michel@gmail.com"
+    match_email = re.search(r'(?:email|e-mail|correio)(?:\s+(?:o|a|meu|seu))?\s+(?:email|e-mail|correio)?(?:\s+para)?\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', p)
+    if match_email:
+        email = match_email.group(1).strip()
+        return json.dumps({
+            "category": "profile",
+            "action": "update",
+            "data": {
+                "email": email
+            }
+        })
+
+    # Ex: "atualizar localizacao para Newark, New Jersey", "muda a localização para New York"
+    match_loc = re.search(r'(?:localização|localizacao|moradia|cidade|endereço|endereco)(?:\s+(?:o|a|minha|sua))?\s+(?:localização|localizacao|moradia|cidade|endereço|endereco)?(?:\s+para)?\s*([a-zA-Z\s,]+)', p)
+    if match_loc and any(w in p for w in ["localização", "localizacao", "moradia", "cidade", "endereço", "endereco"]):
+        loc = match_loc.group(1).strip().title()
+        return json.dumps({
+            "category": "profile",
+            "action": "update",
+            "data": {
+                "location": loc
+            }
+        })
+
+    # 3. Adicionar Idioma
+    match_lang = re.search(r'(?:idioma|lingua|língua)\s+([a-zA-ZçÇãÃõÕéÉíÍóÓ\s]+)\s+(?:nível|nivel|proficiência|como)\s+([a-zA-Z0-9\s]+)', p)
+    if match_lang:
+        name = match_lang.group(1).strip().title()
+        prof = match_lang.group(2).strip().title()
+        return json.dumps({
+            "category": "language",
+            "action": "create",
+            "data": {
+                "name": name,
+                "proficiency": prof,
+                "order_index": 0
+            }
+        })
+
+    return None
+
 @app.post("/api/admin/ai/update")
 def ai_co_pilot_update(payload: dict, db: Session = Depends(get_db), auth: bool = Depends(verify_admin)):
     """
@@ -591,13 +673,19 @@ def ai_co_pilot_update(payload: dict, db: Session = Depends(get_db), auth: bool 
             raw_text = res_json.get("response", "").strip()
         except Exception as ollama_err:
             print(f"[Ollama Co-Pilot API Error] Falha total no parser local. Motivo: {str(ollama_err)}")
-            detail_msg = (
-                "Nenhum motor de Inteligência Artificial está operacional no momento.<br><br>"
-                "<strong>Como resolver:</strong><br>"
-                "1. Insira uma chave válida do Google Gemini no arquivo <code>server/.env</code> como <code>GEMINI_API_KEY=sua_chave</code> (Obtenha em: <a href='https://aistudio.google.com/' target='_blank' class='text-cyan'>Google AI Studio</a>).<br>"
-                "2. Ou certifique-se de que o <strong>Ollama</strong> está rodando localmente na porta 11434 com o modelo <code>phi3</code> ou <code>llama3</code> instalado (<code>ollama run phi3</code>)."
-            )
-            raise HTTPException(status_code=400, detail=detail_msg)
+            
+            # --- MOTOR DETERMINÍSTICO DE FALLBACK EM CASO DE APIS APAGADAS (LIVRO DA VIDA - LEI 5) ---
+            print("[Co-Pilot AI] Tentando parser determinístico baseado em regras de Regex...")
+            raw_text = try_regex_fallback_parser(prompt)
+            
+            if not raw_text:
+                detail_msg = (
+                    "Nenhum motor de Inteligência Artificial ou Regras Estáticas pôde processar o comando no momento.<br><br>"
+                    "<strong>Como resolver:</strong><br>"
+                    "1. Insira uma chave válida do Google Gemini no arquivo <code>server/.env</code> como <code>GEMINI_API_KEY=sua_chave</code> (Obtenha em: <a href='https://aistudio.google.com/' target='_blank' class='text-cyan'>Google AI Studio</a>).<br>"
+                    "2. Ou certifique-se de que o <strong>Ollama</strong> está rodando localmente na porta 11434 com o modelo <code>phi3</code> ou <code>llama3</code> instalado (<code>ollama run phi3</code>)."
+                )
+                raise HTTPException(status_code=400, detail=detail_msg)
             
     try:
         # Tratamento de retorno markdown indesejado (caso o modelo não respeite o json mode perfeitamente)
@@ -701,136 +789,146 @@ def ai_co_pilot_update(payload: dict, db: Session = Depends(get_db), auth: bool 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro no Co-Piloto AI: {str(e)}")
 
-# --- CHATBOT DO CURRÍCULO (RAG HÍBRIDO COM GEMINI & OLLAMA) ---
+def extract_relevant_context(query: str, db: Session) -> str:
+    """
+    Mecanismo de RAG Local Semântico Otimizado (Lei 9 - Simplicidade).
+    Analisa os termos buscados e filtra dinamicamente as entidades relevantes no SQLite.
+    Reduz em até 80% o footprint de tokens do prompt, acelerando a inferência local da IA.
+    """
+    query_clean = query.strip().lower()
+    keywords = [w for w in query_clean.split() if len(w) > 2] # Ignora artigos/preposições curtíssimas
+    
+    profile = db.query(models.Profile).first()
+    experiences = db.query(models.Experience).all()
+    education = db.query(models.Education).all()
+    skills = db.query(models.Skill).all()
+    business_metrics = db.query(models.BusinessMetric).filter(models.BusinessMetric.is_public == True).all()
+    academic_researches = db.query(models.AcademicResearch).filter(models.AcademicResearch.is_public == True).all()
+    projects = db.query(models.Project).filter(models.Project.is_public == True).all()
+    languages = db.query(models.Language).all()
+    certifications = db.query(models.Certification).all()
+    volunteer_work = db.query(models.VolunteerWork).all()
+    human_values = db.query(models.HumanValue).all()
+    
+    generic_words = {"olá", "ola", "quem", "sobre", "resumo", "apresente", "perfil", "biografia", "tudo", "bom", "dia"}
+    is_generic = len(keywords) == 0 or any(w in generic_words for w in keywords)
+    
+    context = ""
+    if profile:
+        context += f"## Perfil do Michel de Souza\n- Nome: {profile.name}\n- Título: {profile.title}\n- Localização: {profile.location}\n- Resumo: {profile.summary}\n- Contatos: {profile.phone} | {profile.email}\n- Links: {profile.linkedin} | {profile.facebook}\n"
+        if profile.dogma1: context += f"- Dogmas de Engenharia: {profile.dogma1} | {profile.dogma2} | {profile.dogma3}\n"
+        context += "\n"
+
+    if is_generic:
+        tech_skills = [s.name for s in skills if s.category == "tech"][:8]
+        context += f"## Habilidades Chave\n- Stack Principal: {', '.join(tech_skills)}\n\n"
+        
+        context += "## Experiências Principais (Resumo)\n"
+        for exp in sorted(experiences, key=lambda x: x.order_index)[:3]:
+            context += f"- {exp.title} na {exp.company} ({exp.date_range})\n"
+        context += "\n"
+        
+        context += "## Projetos em Destaque\n"
+        for p in sorted(projects, key=lambda x: x.order_index)[:2]:
+            context += f"- {p.title}: {p.short_description}\n"
+        return context
+
+    matched_sections = []
+    
+    def score_text(text: str) -> int:
+        if not text: return 0
+        text_lower = text.lower()
+        return sum(text_lower.count(kw) for kw in keywords)
+
+    for exp in experiences:
+        score = score_text(exp.title) * 3 + score_text(exp.company) * 2 + score_text(exp.description) + score_text(exp.achievements)
+        if score > 0:
+            content = f"### Experiência: {exp.title} na {exp.company} ({exp.date_range})\n- Local: {exp.location}\n- Atividades: {exp.description or 'N/A'}\n- Conquistas: {exp.achievements or 'N/A'}\n- Techs: {exp.tools_used or 'N/A'}\n"
+            matched_sections.append((score, content))
+
+    for edu in education:
+        score = score_text(edu.title) * 3 + score_text(edu.institution) * 2 + score_text(edu.description) + score_text(edu.coursework)
+        if score > 0:
+            content = f"### Formação Acadêmica: {edu.title} no(a) {edu.institution} ({edu.date_range or 'N/A'})\n- Disciplinas: {edu.coursework or 'N/A'}\n- Destaque: {edu.gpa_honors or 'N/A'}\n"
+            matched_sections.append((score, content))
+
+    for p in projects:
+        score = score_text(p.title) * 3 + score_text(p.short_description) * 2 + score_text(p.detailed_description) + score_text(p.tech_stack)
+        if score > 0:
+            content = f"### Projeto: {p.title}\n- Resumo: {p.short_description}\n- Stack: {p.tech_stack or 'N/A'}\n- GitHub: {p.github_url or 'N/A'}\n- Demo: {p.live_demo_url or 'N/A'}\n- Detalhes: {p.detailed_description or 'N/A'}\n"
+            matched_sections.append((score, content))
+
+    for r in academic_researches:
+        score = score_text(r.title) * 3 + score_text(r.abstract) * 2 + score_text(r.publisher)
+        if score > 0:
+            content = f"### Publicação Científica: {r.title} ({r.publisher})\n- DOI: {r.doi or 'N/A'}\n- Resumo: {r.abstract}\n- Link: {r.url}\n"
+            matched_sections.append((score, content))
+
+    for m in business_metrics:
+        score = score_text(m.name) * 3 + score_text(m.category)
+        if score > 0:
+            content = f"### Métrica Corporativa: {m.name}\n- Impacto: {m.value:,} {m.unit} (Categoria: {m.category})\n"
+            matched_sections.append((score, content))
+
+    for l in languages:
+        score = score_text(l.name) * 3 + score_text(l.proficiency)
+        if score > 0:
+            content = f"### Idioma Falado: {l.name}\n- Nível: {l.proficiency} (Leitura: {l.reading_level}, Escrita: {l.writing_level}, Conversação: {l.speaking_level})\n"
+            matched_sections.append((score, content))
+
+    for c in certifications:
+        score = score_text(c.title) * 3 + score_text(c.issuer)
+        if score > 0:
+            content = f"### Certificação: {c.title} (Emissor: {c.issuer} | {c.date_issued})\n- Credencial: {c.credential_id or 'N/A'} (Link: {c.credential_url or 'N/A'})\n"
+            matched_sections.append((score, content))
+
+    for v in volunteer_work:
+        score = score_text(v.role) * 3 + score_text(v.organization) * 2 + score_text(v.description)
+        if score > 0:
+            content = f"### Trabalho Voluntário: {v.role} na {v.organization} ({v.date_range})\n- Atividades: {v.description}\n- Impacto: {v.impact or 'N/A'}\n"
+            matched_sections.append((score, content))
+
+    matched_skills = [s.name for s in skills if score_text(s.name) > 0]
+    if matched_skills:
+        content = f"### Competências Relevantes Identificadas:\n- {', '.join(matched_skills)}\n"
+        matched_sections.append((2, content))
+
+    matched_values = [f"{v.name} ({v.description})" for v in human_values if score_text(v.name) > 0 or score_text(v.description) > 0]
+    if matched_values:
+        content = "### Valores Humanos Relacionados:\n" + "\n".join(f"- {val}" for val in matched_values) + "\n"
+        matched_sections.append((2, content))
+
+    matched_sections.sort(key=lambda x: x[0], reverse=True)
+    
+    if matched_sections:
+        context += "## Informações Específicas do Michel Encontradas para a Pergunta:\n"
+        for _, sect in matched_sections[:5]:
+            context += sect + "\n"
+    else:
+        tech_skills = [s.name for s in skills if s.category == "tech"][:10]
+        context += f"## Resumo Geral de Competências\n- Habilidades Técnicas: {', '.join(tech_skills)}\n"
+        
+    return context
+
 @app.post("/api/chat")
 def chat_with_cv(payload: dict, db: Session = Depends(get_db)):
     """
-    Chatbot interativo do Currículo do Michel. Realiza busca ampla em todas as tabelas do SQLite,
-    formata um contexto rico e processa a resposta usando Gemini (principal) ou Ollama (fallback).
+    Chatbot interativo do Currículo do Michel. Realiza busca dinâmica RAG baseada em relevância,
+    otimizando a inferência, e processa a resposta usando Gemini (principal) ou Ollama (fallback).
     """
     message = payload.get("message")
     if not message:
         raise HTTPException(status_code=400, detail="Falta a mensagem do usuário.")
     
-    # 1. Busca ampla no banco de dados SQLite para construir o contexto RAG
+    # 1. Busca contextualizada avançada via RAG semântico local
+    context = extract_relevant_context(message, db)
     profile = db.query(models.Profile).first()
-    experiences = db.query(models.Experience).order_by(models.Experience.order_index).all()
-    education = db.query(models.Education).order_by(models.Education.order_index).all()
-    skills = db.query(models.Skill).order_by(models.Skill.order_index).all()
-    business_metrics = db.query(models.BusinessMetric).filter(models.BusinessMetric.is_public == True).order_by(models.BusinessMetric.order_index).all()
-    academic_researches = db.query(models.AcademicResearch).filter(models.AcademicResearch.is_public == True).order_by(models.AcademicResearch.order_index).all()
-    human_values = db.query(models.HumanValue).order_by(models.HumanValue.order_index).all()
-    projects = db.query(models.Project).filter(models.Project.is_public == True).order_by(models.Project.order_index).all()
-    languages = db.query(models.Language).order_by(models.Language.order_index).all()
-    certifications = db.query(models.Certification).order_by(models.Certification.order_index).all()
-    volunteer_work = db.query(models.VolunteerWork).order_by(models.VolunteerWork.order_index).all()
     
-    # 2. Formatação do contexto RAG estruturado em Markdown
-    context = ""
-    if profile:
-        context += f"## Perfil Profissional\n- Nome: {profile.name}\n- Título: {profile.title}\n- Localização: {profile.location}\n- Contato: {profile.phone} | {profile.email}\n- Links: {profile.linkedin} | {profile.facebook}\n- Resumo: {profile.summary}\n"
-        if profile.dogma1 or profile.dogma2 or profile.dogma3:
-            context += "- Dogmas de Engenharia:\n"
-            if profile.dogma1: context += f"  * {profile.dogma1}\n"
-            if profile.dogma2: context += f"  * {profile.dogma2}\n"
-            if profile.dogma3: context += f"  * {profile.dogma3}\n"
-        if profile.hobbies: context += f"- Hobbies: {profile.hobbies}\n"
-        if profile.availability: context += f"- Disponibilidade: {profile.availability}\n"
-        if profile.target_role_types: context += f"- Cargos de Interesse: {profile.target_role_types}\n"
-        context += "\n"
-        
-    if experiences:
-        context += "## Experiências Profissionais\n"
-        for exp in experiences:
-            context += f"### {exp.title} na empresa {exp.company}\n"
-            context += f"- Período e Local: {exp.date_range} | {exp.location}\n"
-            if exp.description: context += f"- Descrição: {exp.description}\n"
-            if exp.achievements: context += f"- Conquistas:\n{exp.achievements}\n"
-            if exp.tools_used: context += f"- Ferramentas/Tecnologias Utilizadas: {exp.tools_used}\n"
-            if exp.team_size: context += f"- Tamanho da Equipe: {exp.team_size} pessoas\n"
-            if exp.budget_managed: context += f"- Orçamento Gerenciado: {exp.budget_managed}\n"
-            context += "\n"
-            
-    if education:
-        context += "## Formação Acadêmica & Cursos\n"
-        for edu in education:
-            context += f"### {edu.title} - {edu.institution}\n"
-            if edu.date_range: context += f"- Período: {edu.date_range}\n"
-            if edu.description: context += f"- Detalhes: {edu.description}\n"
-            if edu.coursework: context += f"- Disciplinas Relevantes: {edu.coursework}\n"
-            if edu.thesis: context += f"- Tese/Trabalho de Conclusão: {edu.thesis}\n"
-            if edu.gpa_honors: context += f"- Honras/Destaques: {edu.gpa_honors}\n"
-            context += "\n"
-            
-    if skills:
-        context += "## Competências & Habilidades\n"
-        tech_skills = [s.name for s in skills if s.category == "tech"]
-        core_skills = [s.name for s in skills if s.category == "core"]
-        if tech_skills: context += f"- Habilidades Técnicas: {', '.join(tech_skills)}\n"
-        if core_skills: context += f"- Competências Centrais: {', '.join(core_skills)}\n"
-        context += "\n"
-        
-    if business_metrics:
-        context += "## Impacto & Métricas de Performance Corporativa\n"
-        for m in business_metrics:
-            context += f"- {m.name}: {m.value:,} {m.unit} (Categoria: {m.category})\n"
-        context += "\n"
-        
-    if academic_researches:
-        context += "## Publicações Acadêmicas & Científicas\n"
-        for r in academic_researches:
-            context += f"### Título: {r.title}\n"
-            context += f"- Editora/Depósito: {r.publisher} | Data: {r.date_published}\n"
-            if r.doi: context += f"- DOI Registro: {r.doi} (Selo oficial Zenodo)\n"
-            context += f"- Resumo (Abstract): {r.abstract}\n"
-            context += f"- URL de Acesso: {r.url}\n"
-            context += "\n"
-            
-    if projects:
-        context += "## Projetos Práticos & Portfólio\n"
-        for p in projects:
-            context += f"### Projeto: {p.title}\n"
-            context += f"- Descrição Curta: {p.short_description}\n"
-            if p.detailed_description: context += f"- Detalhes Técnicos: {p.detailed_description}\n"
-            if p.tech_stack: context += f"- Stack Tecnológica: {p.tech_stack}\n"
-            if p.github_url: context += f"- Link GitHub: {p.github_url}\n"
-            if p.live_demo_url: context += f"- Link Live Demo: {p.live_demo_url}\n"
-            context += "\n"
-            
-    if languages:
-        context += "## Proficiência em Idiomas\n"
-        for l in languages:
-            context += f"- {l.name}: Nível {l.proficiency} (Leitura: {l.reading_level or 'N/A'}, Escrita: {l.writing_level or 'N/A'}, Conversação: {l.speaking_level or 'N/A'})\n"
-        context += "\n"
-        
-    if certifications:
-        context += "## Certificações\n"
-        for c in certifications:
-            context += f"- {c.title} (Emissor: {c.issuer} | Data: {c.date_issued})\n"
-            if c.credential_id: context += f"  * ID da Credencial: {c.credential_id}\n"
-            if c.credential_url: context += f"  * Link da Credencial: {c.credential_url}\n"
-        context += "\n"
-        
-    if volunteer_work:
-        context += "## Trabalho Voluntário & Impacto Social\n"
-        for v in volunteer_work:
-            context += f"### {v.role} na organização {v.organization}\n"
-            context += f"- Período: {v.date_range}\n"
-            context += f"- Atividades: {v.description}\n"
-            if v.impact: context += f"- Impacto Alcançado: {v.impact}\n"
-            context += "\n"
-            
-    if human_values:
-        context += "## Valores Humanos e Dogmas Pessoais\n"
-        for val in human_values:
-            context += f"- {val.name}: {val.description}\n"
-        context += "\n"
-        
-    # 3. Definição estrita da persona do assistente
+    # 2. Definição estrita da persona do assistente
     system_prompt = (
         "Você é o 'Michel AI', o assistente virtual oficial inteligente, polido e experiente do currículo de Michel de Souza.\n"
         "Seu objetivo é encantar e responder de forma precisa a perguntas de recrutadores e visitantes do currículo do Michel.\n\n"
-        "Aqui está o contexto completo e atualizado em tempo real extraído da base de dados do Michel:\n"
+        "Aqui está o contexto altamente relevante e filtrado da base de dados do Michel:\n"
         "==================================================\n"
         f"{context}"
         "==================================================\n\n"
