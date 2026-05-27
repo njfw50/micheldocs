@@ -124,8 +124,14 @@ def delete_skill(skill_id: int, db: Session = Depends(get_db)):
 import os
 import secrets
 import json
+import re
+import logging
 from fastapi import Header
 from dotenv import load_dotenv
+
+# Configurar logging estruturado
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Carrega chaves administrativas do .env
 load_dotenv()
@@ -230,7 +236,7 @@ def delete_research(res_id: int, db: Session = Depends(get_db), auth: bool = Dep
     db.commit()
     return {"ok": True}
 
-# --- INTEGRACAO CO-PILOTO AI: PARSER COM GEMINI ---
+# --- INTEGRACAO CO-PILOTO AI: PARSER COM GEMINI (VERSÃO CORRIGIDA) ---
 @app.post("/api/admin/ai/update")
 def ai_co_pilot_update(payload: dict, db: Session = Depends(get_db), auth: bool = Depends(verify_admin)):
     prompt = payload.get("prompt")
@@ -268,29 +274,48 @@ def ai_co_pilot_update(payload: dict, db: Session = Depends(get_db), auth: bool 
         )
         
         try:
-            # Tenta usar a versão mais recente do flash
-            model = genai.GenerativeModel('gemini-1.5-flash-latest')
+            # Tenta usar a versão mais recente do flash (CORRIGIDO: gemini-2.0-flash)
+            model = genai.GenerativeModel('gemini-2.0-flash')
             response = model.generate_content(
                 f"Instruções:\n{system_instructions}\n\nTexto do Michel:\n\"{prompt}\""
             )
         except Exception as e:
-            # Fallback seguro para o modelo padrão universal da API
-            model = genai.GenerativeModel('gemini-pro')
-            response = model.generate_content(
-                f"Instruções:\n{system_instructions}\n\nTexto do Michel:\n\"{prompt}\""
-            )
+            logger.warning(f"Modelo gemini-2.0-flash falhou: {str(e)}. Tentando gemini-1.5-flash...")
+            try:
+                # Fallback para gemini-1.5-flash
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                response = model.generate_content(
+                    f"Instruções:\n{system_instructions}\n\nTexto do Michel:\n\"{prompt}\""
+                )
+            except Exception as e2:
+                logger.error(f"Ambos os modelos falharam: {str(e2)}")
+                raise HTTPException(status_code=500, detail=f"Nenhum modelo Gemini disponível: {str(e2)}")
         
         raw_text = response.text.strip()
-        # Tratamento de retorno markdown indesejado
+        
+        # Tratamento robusto de retorno markdown indesejado usando regex
         if raw_text.startswith("```"):
-            lines = raw_text.splitlines()
-            if lines[0].startswith("```json") or lines[0].startswith("```"):
-                raw_text = "\n".join(lines[1:-1]).strip()
-                
-        ai_data = json.loads(raw_text)
+            # Remove blocos de código markdown
+            raw_text = re.sub(r'^```(?:json)?\n', '', raw_text)
+            raw_text = re.sub(r'\n```$', '', raw_text)
+        
+        # Tentar parsear JSON
+        try:
+            ai_data = json.loads(raw_text)
+        except json.JSONDecodeError as parse_error:
+            logger.error(f"Falha ao parsear JSON da IA: {raw_text}")
+            raise HTTPException(status_code=422, detail=f"Falha de Parsing: Gemini não retornou JSON limpo. Erro: {str(parse_error)}")
+        
         category = ai_data.get("category")
-        action = ai_data.get("action")
+        action = ai_data.get("action", "create")
         fields = ai_data.get("data", {})
+        
+        # Validação básica de campos obrigatórios
+        if not category:
+            raise HTTPException(status_code=422, detail="IA não retornou categoria válida.")
+        
+        if not fields:
+            raise HTTPException(status_code=422, detail="IA não retornou dados para inserir.")
         
         # Injeção dinâmica no ORM de forma parametrizada segura (Anti-SQLi)
         if category == "profile":
@@ -302,56 +327,159 @@ def ai_co_pilot_update(payload: dict, db: Session = Depends(get_db), auth: bool 
                 for k, v in fields.items():
                     setattr(db_profile, k, v)
             db.commit()
+            db.refresh(db_profile)
+            logger.info(f"Perfil atualizado com sucesso via IA")
             return {"status": "success", "category": category, "action": "update", "data": fields}
             
         elif category == "experience":
-            db_exp = models.Experience(**fields)
-            db.add(db_exp)
-            db.commit()
-            db.refresh(db_exp)
-            return {"status": "success", "category": category, "action": "create", "id": db_exp.id, "data": fields}
+            if action == "update":
+                exp_id = fields.get("id")
+                if not exp_id:
+                    raise HTTPException(status_code=422, detail="Para atualizar experiência, forneça o 'id'.")
+                db_exp = db.query(models.Experience).filter(models.Experience.id == exp_id).first()
+                if not db_exp:
+                    raise HTTPException(status_code=404, detail="Experiência não encontrada para atualizar.")
+                for k, v in fields.items():
+                    if k != "id":
+                        setattr(db_exp, k, v)
+                db.commit()
+                db.refresh(db_exp)
+                logger.info(f"Experiência {exp_id} atualizada via IA")
+                return {"status": "success", "category": category, "action": "update", "id": db_exp.id, "data": fields}
+            else:
+                db_exp = models.Experience(**fields)
+                db.add(db_exp)
+                db.commit()
+                db.refresh(db_exp)
+                logger.info(f"Nova experiência criada via IA: {db_exp.id}")
+                return {"status": "success", "category": category, "action": "create", "id": db_exp.id, "data": fields}
             
         elif category == "education":
-            db_edu = models.Education(**fields)
-            db.add(db_edu)
-            db.commit()
-            db.refresh(db_edu)
-            return {"status": "success", "category": category, "action": "create", "id": db_edu.id, "data": fields}
+            if action == "update":
+                edu_id = fields.get("id")
+                if not edu_id:
+                    raise HTTPException(status_code=422, detail="Para atualizar educação, forneça o 'id'.")
+                db_edu = db.query(models.Education).filter(models.Education.id == edu_id).first()
+                if not db_edu:
+                    raise HTTPException(status_code=404, detail="Educação não encontrada para atualizar.")
+                for k, v in fields.items():
+                    if k != "id":
+                        setattr(db_edu, k, v)
+                db.commit()
+                db.refresh(db_edu)
+                logger.info(f"Educação {edu_id} atualizada via IA")
+                return {"status": "success", "category": category, "action": "update", "id": db_edu.id, "data": fields}
+            else:
+                db_edu = models.Education(**fields)
+                db.add(db_edu)
+                db.commit()
+                db.refresh(db_edu)
+                logger.info(f"Nova educação criada via IA: {db_edu.id}")
+                return {"status": "success", "category": category, "action": "create", "id": db_edu.id, "data": fields}
             
         elif category == "skill":
-            db_skill = models.Skill(**fields)
-            db.add(db_skill)
-            db.commit()
-            db.refresh(db_skill)
-            return {"status": "success", "category": category, "action": "create", "id": db_skill.id, "data": fields}
+            if action == "update":
+                skill_id = fields.get("id")
+                if not skill_id:
+                    raise HTTPException(status_code=422, detail="Para atualizar skill, forneça o 'id'.")
+                db_skill = db.query(models.Skill).filter(models.Skill.id == skill_id).first()
+                if not db_skill:
+                    raise HTTPException(status_code=404, detail="Skill não encontrada para atualizar.")
+                for k, v in fields.items():
+                    if k != "id":
+                        setattr(db_skill, k, v)
+                db.commit()
+                db.refresh(db_skill)
+                logger.info(f"Skill {skill_id} atualizada via IA")
+                return {"status": "success", "category": category, "action": "update", "id": db_skill.id, "data": fields}
+            else:
+                db_skill = models.Skill(**fields)
+                db.add(db_skill)
+                db.commit()
+                db.refresh(db_skill)
+                logger.info(f"Nova skill criada via IA: {db_skill.id}")
+                return {"status": "success", "category": category, "action": "create", "id": db_skill.id, "data": fields}
             
         elif category == "business_metric":
-            db_metric = models.BusinessMetric(**fields)
-            db.add(db_metric)
-            db.commit()
-            db.refresh(db_metric)
-            return {"status": "success", "category": category, "action": "create", "id": db_metric.id, "data": fields}
+            if action == "update":
+                metric_id = fields.get("id")
+                if not metric_id:
+                    raise HTTPException(status_code=422, detail="Para atualizar métrica, forneça o 'id'.")
+                db_metric = db.query(models.BusinessMetric).filter(models.BusinessMetric.id == metric_id).first()
+                if not db_metric:
+                    raise HTTPException(status_code=404, detail="Métrica não encontrada para atualizar.")
+                for k, v in fields.items():
+                    if k != "id":
+                        setattr(db_metric, k, v)
+                db.commit()
+                db.refresh(db_metric)
+                logger.info(f"Métrica {metric_id} atualizada via IA")
+                return {"status": "success", "category": category, "action": "update", "id": db_metric.id, "data": fields}
+            else:
+                db_metric = models.BusinessMetric(**fields)
+                db.add(db_metric)
+                db.commit()
+                db.refresh(db_metric)
+                logger.info(f"Nova métrica criada via IA: {db_metric.id}")
+                return {"status": "success", "category": category, "action": "create", "id": db_metric.id, "data": fields}
             
         elif category == "academic_research":
-            db_res = models.AcademicResearch(**fields)
-            db.add(db_res)
-            db.commit()
-            db.refresh(db_res)
-            return {"status": "success", "category": category, "action": "create", "id": db_res.id, "data": fields}
+            if action == "update":
+                res_id = fields.get("id")
+                if not res_id:
+                    raise HTTPException(status_code=422, detail="Para atualizar pesquisa, forneça o 'id'.")
+                db_res = db.query(models.AcademicResearch).filter(models.AcademicResearch.id == res_id).first()
+                if not db_res:
+                    raise HTTPException(status_code=404, detail="Pesquisa não encontrada para atualizar.")
+                for k, v in fields.items():
+                    if k != "id":
+                        setattr(db_res, k, v)
+                db.commit()
+                db.refresh(db_res)
+                logger.info(f"Pesquisa {res_id} atualizada via IA")
+                return {"status": "success", "category": category, "action": "update", "id": db_res.id, "data": fields}
+            else:
+                db_res = models.AcademicResearch(**fields)
+                db.add(db_res)
+                db.commit()
+                db.refresh(db_res)
+                logger.info(f"Nova pesquisa criada via IA: {db_res.id}")
+                return {"status": "success", "category": category, "action": "create", "id": db_res.id, "data": fields}
             
         elif category == "human_value":
-            db_val = models.HumanValue(**fields)
-            db.add(db_val)
-            db.commit()
-            db.refresh(db_val)
-            return {"status": "success", "category": category, "action": "create", "id": db_val.id, "data": fields}
+            if action == "update":
+                val_id = fields.get("id")
+                if not val_id:
+                    raise HTTPException(status_code=422, detail="Para atualizar valor, forneça o 'id'.")
+                db_val = db.query(models.HumanValue).filter(models.HumanValue.id == val_id).first()
+                if not db_val:
+                    raise HTTPException(status_code=404, detail="Valor não encontrado para atualizar.")
+                for k, v in fields.items():
+                    if k != "id":
+                        setattr(db_val, k, v)
+                db.commit()
+                db.refresh(db_val)
+                logger.info(f"Valor {val_id} atualizado via IA")
+                return {"status": "success", "category": category, "action": "update", "id": db_val.id, "data": fields}
+            else:
+                db_val = models.HumanValue(**fields)
+                db.add(db_val)
+                db.commit()
+                db.refresh(db_val)
+                logger.info(f"Novo valor criado via IA: {db_val.id}")
+                return {"status": "success", "category": category, "action": "create", "id": db_val.id, "data": fields}
             
         else:
             raise HTTPException(status_code=422, detail=f"Categoria retornada pela IA é inválida: {category}")
             
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=422, detail=f"Falha de Parsing: Gemini não retornou JSON limpo. Payload: {raw_text}")
+    except HTTPException:
+        # Re-lançar exceções HTTP já tratadas
+        raise
+    except json.JSONDecodeError as je:
+        logger.error(f"JSON Decode Error: {str(je)}")
+        raise HTTPException(status_code=422, detail=f"Falha de Parsing JSON: {str(je)}")
     except Exception as e:
+        logger.error(f"Erro no Co-Piloto AI: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Erro no Co-Piloto AI: {str(e)}")
 
 # ===== SERVIÇO DE HOSPEDAGEM E STATIC FILES (SIMPLICIDADE TÉCNICA - LEI 9) =====
