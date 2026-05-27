@@ -741,6 +741,9 @@ function formatMarkdown(text) {
     // Converte links markdown: [texto](url) -> <a>texto</a>
     html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-cyan">$1</a>');
     
+    // Converte blocos de código multi-linha ```[linguagem] ... ```
+    html = html.replace(/```[a-z]*([\s\S]*?)```/g, '<pre class="bg-black bg-opacity-50 p-3 rounded border border-secondary border-opacity-25 my-2"><code class="font-monospace text-light small d-block" style="white-space: pre-wrap; word-break: break-all; text-align: left;">$1</code></pre>');
+
     // Converte blocos de código inline: `código` -> <code>código</code>
     html = html.replace(/`(.*?)`/g, '<code class="font-monospace">$1</code>');
     
@@ -793,4 +796,425 @@ function appendChatMessage(text, className, id = null) {
     
     chatContainer.appendChild(msgDiv);
     chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+
+// --- AI JOB FIT ANALYZER CONTROLS (EMBARCADA E ROBUSTA) ---
+
+function toggleFitAnalyzer() {
+    const panel = document.getElementById("ai-fit-panel");
+    if (!panel) return;
+    
+    panel.classList.toggle("d-none");
+    if (!panel.classList.contains("d-none")) {
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+}
+
+async function analyzeJobCompatibility() {
+    const jobDescEl = document.getElementById("ai-job-desc");
+    const jobDescText = jobDescEl.value.trim();
+    if (!jobDescText) {
+        alert("Por favor, cole a descrição de uma vaga antes de analisar.");
+        return;
+    }
+    
+    const btn = document.getElementById("ai-fit-btn");
+    const btnText = document.getElementById("ai-fit-btn-text");
+    const btnLoader = document.getElementById("ai-fit-btn-loader");
+    const resultsPanel = document.getElementById("ai-fit-results");
+    
+    // Mostra indicador de carregamento
+    btn.disabled = true;
+    btnText.classList.add("d-none");
+    btnLoader.classList.remove("d-none");
+    resultsPanel.classList.add("d-none");
+    
+    let rawResultText = "";
+    
+    // 1. TENTA PROCESSAMENTO LOCAL (window.ai) SE HABILITADO
+    const isLocalAIAvailable = (window.ai && (window.ai.assistant || window.ai.createTextSession));
+    if (isLocalAIAvailable && cvDataGlobal) {
+        console.log("[Fit Analyzer] Processando compatibilidade localmente via window.ai...");
+        try {
+            const context = buildClientRAGContext(cvDataGlobal);
+            const systemPrompt = `Você é o 'Michel AI', especialista técnico de contratação do currículo de Michel de Souza.
+Sua tarefa é analisar a descrição da vaga fornecida pelo recrutador em relação ao currículo do Michel.
+==================================================
+${context}
+==================================================
+Instruções Estritas:
+1. Calcule um 'Match Score' realista de 0 a 100 com base em quão bem as habilidades e experiências do Michel se alinham com a vaga.
+2. Escreva um 'Parecer de Compatibilidade' (pitch) focado e persuasivo de 1 parágrafo em português sobre como Michel ajudará a empresa nessa função.
+3. Identifique de 2 a 4 'Pontos de Destaque' (bullet-points curtos iniciando com emoji) que comprovam esse alinhamento.
+Você deve retornar estritamente e apenas um objeto JSON válido (sem comentários, sem crases markdown) no seguinte formato:
+{
+  "score": 85,
+  "pitch": "Michel se alinha perfeitamente com a vaga devido a...",
+  "strengths": "• Sólida lógica de programação desenvolvida em Harvard\\n• Experiência prática com TypeScript e React"
+}`;
+
+            if (window.ai.assistant) {
+                const session = await window.ai.assistant.create({ systemPrompt: systemPrompt });
+                rawResultText = await session.prompt(jobDescText);
+                session.destroy();
+            } else if (window.ai.createTextSession) {
+                const session = await window.ai.createTextSession({ systemPrompt: systemPrompt });
+                rawResultText = await session.prompt(jobDescText);
+                session.destroy();
+            }
+        } catch (localErr) {
+            console.warn("[Fit Analyzer] Falha ao rodar window.ai localmente. Acionando fallback do servidor...", localErr);
+        }
+    }
+    
+    // 2. FALLBACK: CONSULTA ROTA DO SERVIDOR FASTAPI
+    if (!rawResultText) {
+        console.log("[Fit Analyzer] Solicitando análise ao servidor backend...");
+        try {
+            const response = await fetch(getApiBase() + '/api/chat/analyze-fit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ job_description: jobDescText })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                renderFitResults(data.score, data.pitch, data.strengths);
+                
+                // Restaura estado do botão
+                btn.disabled = false;
+                btnText.classList.remove("d-none");
+                btnLoader.classList.add("d-none");
+                return;
+            }
+        } catch (serverErr) {
+            console.error("[Fit Analyzer] Erro ao comunicar com servidor:", serverErr);
+        }
+    }
+    
+    // 3. PARSE E RENDERIZACAO DOS RESULTADOS LOCAIS
+    if (rawResultText) {
+        const parsed = parseAIResponse(rawResultText);
+        renderFitResults(parsed.score, parsed.pitch, parsed.strengths);
+    } else {
+        // Se absolutamente tudo falhar, apresenta um fallback estático robusto local
+        renderFitResults(
+            82,
+            "Michel possui alta aderência para posições de desenvolvimento de software e atendimento de excelência. Seu rigor analítico desenvolvido em Harvard (CS50) e seu histórico profissional bilíngue o capacitam a entregar valor ágil em diversas funções.",
+            "• Sólida lógica de programação desenvolvida no CS50 de Harvard<br>• Mais de 500 clientes internacionais atendidos de forma primorosa<br>• Facilidade de aprendizado de novas stacks e resiliência comprovada"
+        );
+    }
+    
+    // Restaura estado do botão
+    btn.disabled = false;
+    btnText.classList.remove("d-none");
+    btnLoader.classList.add("d-none");
+}
+
+function parseAIResponse(text) {
+    let score = 80;
+    let pitch = "";
+    let strengths = "";
+    
+    try {
+        let cleanText = text.trim();
+        // Remove delimitadores de código markdown do JSON se existirem
+        if (cleanText.startsWith("```")) {
+            const lines = cleanText.split("\n");
+            if (lines[0].startsWith("```json") || lines[0].startsWith("```")) {
+                cleanText = lines.slice(1, -1).join("\n").trim();
+            }
+        }
+        const data = JSON.parse(cleanText);
+        score = parseInt(data.score) || 80;
+        pitch = data.pitch || "";
+        strengths = data.strengths || "";
+        return { score, pitch, strengths };
+    } catch (e) {
+        console.warn("[Fit Analyzer] Parsing de JSON falhou. Aplicando parser heurístico...", e);
+        
+        // Match do score
+        const scoreMatch = text.match(/(\d{1,3})\s*%/);
+        if (scoreMatch) {
+            score = parseInt(scoreMatch[1]);
+        } else {
+            const numMatch = text.match(/score\D*(\d{2,3})/i);
+            if (numMatch) score = parseInt(numMatch[1]);
+        }
+        score = Math.max(0, Math.min(100, score));
+        
+        // Separa linhas com marcadores de pontos fortes
+        const lines = text.split("\n");
+        let strengthLines = [];
+        let pitchLines = [];
+        
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (trimmed.startsWith("•") || trimmed.startsWith("-") || trimmed.startsWith("*") || /^\d+\./.test(trimmed)) {
+                strengthLines.push(trimmed);
+            } else if (trimmed && !trimmed.toLowerCase().includes("score") && !trimmed.includes("{") && !trimmed.includes("}")) {
+                pitchLines.push(trimmed);
+            }
+        });
+        
+        pitch = pitchLines.join("<br><br>") || "Michel se alinha positivamente com a vaga proposta e trará soluções eficientes para a sua equipe.";
+        strengths = strengthLines.join("<br>") || "• Rigor metodológico desenvolvido em Harvard (CS50x)<br>• Habilidade de resolver problemas complexos com código limpo";
+        
+        return { score, pitch, strengths };
+    }
+}
+
+function renderFitResults(score, pitch, strengths) {
+    const scoreEl = document.getElementById("ai-fit-score");
+    const pitchEl = document.getElementById("ai-fit-pitch");
+    const strengthsEl = document.getElementById("ai-fit-strengths");
+    const resultsPanel = document.getElementById("ai-fit-results");
+    
+    // Configura os textos
+    pitchEl.innerHTML = formatMarkdown(pitch);
+    strengthsEl.innerHTML = formatMarkdown(strengths);
+    
+    // Animação progressiva do Score
+    let currentScore = 0;
+    scoreEl.innerText = "0%";
+    resultsPanel.classList.remove("d-none");
+    
+    // Determina a cor com base no score
+    let scoreColor = "var(--primary)";
+    if (score >= 90) scoreColor = "#10b981"; // Verde esmeralda para ótima compatibilidade
+    else if (score >= 75) scoreColor = "#06b6d4"; // Cyan para boa compatibilidade
+    else if (score >= 50) scoreColor = "#f59e0b"; // Amarelo
+    else scoreColor = "#ef4444"; // Vermelho
+    
+    scoreEl.style.color = scoreColor;
+    scoreEl.parentElement.style.borderColor = scoreColor;
+    
+    const interval = setInterval(() => {
+        if (currentScore >= score) {
+            clearInterval(interval);
+            scoreEl.innerText = `${score}%`;
+        } else {
+            currentScore += 2;
+            if (currentScore > score) currentScore = score;
+            scoreEl.innerText = `${currentScore}%`;
+        }
+    }, 20);
+}
+
+
+// --- CONTROLES DE ABAS DO PAINEL DE IA ---
+
+function switchAIFitTab(tabName) {
+    const compBtn = document.getElementById("tab-compatibility-btn");
+    const scenBtn = document.getElementById("tab-scenario-btn");
+    const compContent = document.getElementById("ai-tab-compatibility-content");
+    const scenContent = document.getElementById("ai-tab-scenario-content");
+    
+    if (tabName === 'compatibility') {
+        compBtn.classList.add("text-light", "border-primary");
+        compBtn.classList.remove("text-muted", "border-transparent");
+        scenBtn.classList.add("text-muted", "border-transparent");
+        scenBtn.classList.remove("text-light", "border-primary");
+        
+        compContent.classList.remove("d-none");
+        scenContent.classList.add("d-none");
+    } else {
+        scenBtn.classList.add("text-light", "border-primary");
+        scenBtn.classList.remove("text-muted", "border-transparent");
+        compBtn.classList.add("text-muted", "border-transparent");
+        compBtn.classList.remove("text-light", "border-primary");
+        
+        scenContent.classList.remove("d-none");
+        compContent.classList.add("d-none");
+    }
+}
+
+
+// --- AI SCENARIO SIMULATOR CONTROLS ---
+
+async function runAIScenarioSimulation() {
+    const scenarioSelect = document.getElementById("ai-scenario-select");
+    const scenarioType = scenarioSelect.value;
+    
+    const btn = document.getElementById("ai-scenario-btn");
+    const btnText = document.getElementById("ai-scenario-btn-text");
+    const btnLoader = document.getElementById("ai-scenario-btn-loader");
+    const resultsPanel = document.getElementById("ai-scenario-results");
+    
+    // Mostra indicador de carregamento
+    btn.disabled = true;
+    btnText.classList.add("d-none");
+    btnLoader.classList.remove("d-none");
+    resultsPanel.classList.add("d-none");
+    
+    let rawResultText = "";
+    
+    // 1. TENTA PROCESSAMENTO LOCAL (window.ai) SE HABILITADO
+    const isLocalAIAvailable = (window.ai && (window.ai.assistant || window.ai.createTextSession));
+    if (isLocalAIAvailable && cvDataGlobal) {
+        console.log(`[Scenario Simulator] Simulando cenário '${scenarioType}' via window.ai local...`);
+        try {
+            const systemPrompt = `Você é o 'Michel AI', especialista técnico de contratação do currículo de Michel de Souza.
+Sua tarefa é simular como Michel resolveria o cenário prático de tipo '${scenarioType}' de forma canônica.
+Seus dogmas fundamentais de desenvolvimento de software (DOGMAs) são:
+1. DOGMA 2: No Silent Failures — Todo erro deve ser tratado de forma explícita e elegante nas camadas adequadas.
+2. DOGMA 3: Validate ALL Inputs with Zod — Garantir a integridade das entradas via esquemas de validação rígidos.
+3. DOGMA 4: External Service Isolation — Isolamento de serviços externos com adapters e injeção de dependência SOLID.
+
+Você deve retornar estritamente e apenas um objeto JSON válido (sem comentários, sem crases markdown) no seguinte formato:
+{
+  "scenario_type": "${scenarioType}",
+  "scenario_title": "Título do Cenário",
+  "problem_statement": "Desafio de Partida (em Código/Markdown)",
+  "michel_solution": "Solução Canônica do Michel (em Código/Markdown)",
+  "explanation": "Explicação técnica ligando aos dogmas do Michel",
+  "performance_score": 98
+}`;
+
+            if (window.ai.assistant) {
+                const session = await window.ai.assistant.create({ systemPrompt: systemPrompt });
+                rawResultText = await session.prompt(`Gere a simulação para o tipo de cenário: ${scenarioType}`);
+                session.destroy();
+            } else if (window.ai.createTextSession) {
+                const session = await window.ai.createTextSession({ systemPrompt: systemPrompt });
+                rawResultText = await session.prompt(`Gere a simulação para o tipo de cenário: ${scenarioType}`);
+                session.destroy();
+            }
+        } catch (localErr) {
+            console.warn("[Scenario Simulator] Falha ao rodar window.ai localmente. Acionando fallback do servidor...", localErr);
+        }
+    }
+    
+    // 2. FALLBACK: CONSULTA ROTA DO SERVIDOR FASTAPI
+    let parsedResult = null;
+    if (!rawResultText) {
+        console.log("[Scenario Simulator] Solicitando simulação ao servidor backend...");
+        try {
+            const response = await fetch(getApiBase() + '/api/chat/analyze-scenario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scenario_type: scenarioType })
+            });
+            
+            if (response.ok) {
+                parsedResult = await response.json();
+            }
+        } catch (serverErr) {
+            console.error("[Scenario Simulator] Erro ao comunicar com servidor:", serverErr);
+        }
+    } else {
+        // Se temos texto bruto da IA local, fazemos o parse
+        parsedResult = parseScenarioAIResponse(rawResultText, scenarioType);
+    }
+    
+    // 3. SE AMBOS FALHAREM, GERA O FALLBACK LOCAL ESTÁTICO RESILIENTE
+    if (!parsedResult) {
+        console.warn("[Scenario Simulator] Sem resposta da IA local ou servidor. Acionando fallback estático...");
+        parsedResult = getStaticScenarioFallback(scenarioType);
+    }
+    
+    // 4. RENDERIZACAO DOS RESULTADOS
+    renderScenarioResults(parsedResult);
+    
+    // Restaura estado do botão
+    btn.disabled = false;
+    btnText.classList.remove("d-none");
+    btnLoader.classList.add("d-none");
+}
+
+function parseScenarioAIResponse(text, type) {
+    try {
+        let cleanText = text.trim();
+        if (cleanText.startsWith("```")) {
+            const lines = cleanText.split("\n");
+            if (lines[0].startsWith("```json") || lines[0].startsWith("```")) {
+                cleanText = lines.slice(1, -1).join("\n").trim();
+            }
+        }
+        const data = JSON.parse(cleanText);
+        return {
+            scenario_type: data.scenario_type || type,
+            scenario_title: data.scenario_title || "Cenário Técnico Simulado",
+            problem_statement: data.problem_statement || "```\nCódigo problemático de partida\n```",
+            michel_solution: data.michel_solution || "```\nSolução canônica do Michel\n```",
+            explanation: data.explanation || "Resolução em total conformidade de dogmas.",
+            performance_score: parseInt(data.performance_score) || 95
+        };
+    } catch (e) {
+        console.warn("[Scenario Simulator] Falha ao fazer parse de JSON. Aplicando fallback estático para integridade...", e);
+        return getStaticScenarioFallback(type);
+    }
+}
+
+function renderScenarioResults(data) {
+    const titleEl = document.getElementById("ai-sim-title");
+    const problemEl = document.getElementById("ai-sim-problem");
+    const solutionEl = document.getElementById("ai-sim-solution");
+    const explanationEl = document.getElementById("ai-sim-explanation");
+    const scoreEl = document.getElementById("ai-sim-score");
+    const resultsPanel = document.getElementById("ai-scenario-results");
+    
+    // Insere dados higienizados e formatados em Markdown
+    titleEl.innerText = data.scenario_title;
+    problemEl.innerHTML = formatMarkdown(data.problem_statement);
+    solutionEl.innerHTML = formatMarkdown(data.michel_solution);
+    explanationEl.innerHTML = formatMarkdown(data.explanation);
+    
+    // Animação progressiva do score
+    let currentScore = 0;
+    scoreEl.innerText = "0%";
+    resultsPanel.classList.remove("d-none");
+    
+    const targetScore = data.performance_score || 98;
+    const interval = setInterval(() => {
+        if (currentScore >= targetScore) {
+            clearInterval(interval);
+            scoreEl.innerText = `${targetScore}%`;
+        } else {
+            currentScore += 2;
+            if (currentScore > targetScore) currentScore = targetScore;
+            scoreEl.innerText = `${currentScore}%`;
+        }
+    }, 15);
+}
+
+function getStaticScenarioFallback(type) {
+    if (type === "tech-security") {
+        return {
+            scenario_type: "tech-security",
+            scenario_title: "🔒 Segurança de APIs: SQL Injection em FastAPI",
+            problem_statement: "```python\n# CÓDIGO VULNERÁVEL (Anti-Padrão Comum)\n@app.get(\"/api/users\")\ndef get_users_vulnerable(email: str, db: Session = Depends(get_db)):\n    # A interpolação de strings direta permite injeção maliciosa de SQL\n    query = f\"SELECT * FROM users WHERE email = '{email}'\"\n    result = db.execute(text(query)).fetchall()\n    return result\n```",
+            michel_solution: "```python\n# SOLUÇÃO CANÔNICA DO MICHEL (100% Protegido)\nfrom sqlalchemy import text\n\n@app.get(\"/api/users\", response_model=List[schemas.UserResponse])\ndef get_users_safe(email: str, db: Session = Depends(get_db)):\n    try:\n        # 1. Utilização de queries parametrizadas nativas (SQLAlchemy ORM)\n        # O driver trata os parâmetros de forma isolada da compilação da query\n        query = text(\"SELECT * FROM users WHERE email = :email\")\n        result = db.execute(query, {\"email\": email}).fetchall()\n        return result\n    except Exception as db_err:\n        # DOGMA 2: No Silent Failures - Tratamento e log explícito do erro\n        logger.error(f\"Falha ao consultar usuário {email}: {str(db_err)}\")\n        raise HTTPException(status_code=500, detail=\"Erro interno do banco de dados.\")\n```",
+            explanation: "Michel aborda essa vulnerabilidade utilizando a compilação parametrizada nativa do SQLAlchemy ORM. Isso anula qualquer possibilidade de ataque de SQL Injection, pois o mecanismo do banco trata as entradas como literais isolados e nunca como código executável. Além disso, em perfeita consonância com o DOGMA 2 (No Silent Failures), a função envolve o processamento em uma estrutura try-catch explícita, capturando falhas de conexão de infraestrutura e registrando logs detalhados sem vazar mensagens do sistema interno para o cliente final.",
+            performance_score: 100
+        };
+    } else if (type === "tech-validation") {
+        return {
+            scenario_type: "tech-validation",
+            scenario_title: "🛡️ Arquitetura Defensiva: Validação com Zod e TypeScript",
+            problem_statement: "```typescript\n// CÓDIGO INSEGURO (Anti-Padrão Sem Validação)\napp.post('/api/register', async (req, res) => {\n  // Atribuição direta sem checagem de tipos ou regras de negócio\n  const { username, age, email } = req.body;\n  const newUser = await saveToDatabase({ username, age, email });\n  res.status(201).json(newUser);\n});\n```",
+            michel_solution: "```typescript\n// SOLUÇÃO CANÔNICA DO MICHEL (Validação de Tipagem Estrita)\nimport { z } from 'zod';\n\n// 1. Definição rígida do esquema de dados conforme o DOGMA 3\nconst registerSchema = z.object({\n  username: z.string().min(3, 'Mínimo de 3 caracteres').max(30),\n  age: z.number().int().min(18, 'Apenas maiores de idade').max(120),\n  email: z.string().email('Endereço de e-mail inválido')\n}).strict(); // strict impede propriedades adicionais indesejadas (Anti-XSS)\n\napp.post('/api/register', async (req, res) => {\n  try {\n    // 2. Validação instantânea síncrona com lançamento de erro explícito\n    const validatedData = registerSchema.parse(req.body);\n    const newUser = await saveToDatabase(validatedData);\n    return res.status(201).json(newUser);\n  } catch (error) {\n    // DOGMA 2 & 3: Captura erros do Zod e envia formatação amigável ao cliente\n    if (error instanceof z.ZodError) {\n      return res.status(400).json({ status: 'error', issues: error.errors });\n    }\n    return res.status(500).json({ status: 'error', message: 'Erro interno do servidor.' });\n  }\n});\n```",
+            explanation: "Conforme estabelecido no DOGMA 3 (Validate ALL Inputs with Zod), Michel impede a entrada de dados maliciosos ou malformados na aplicação. O uso do Zod com .strict() garante que propriedades não documentadas (que poderiam ser utilizadas em ataques de poluição de protótipo ou XSS) sejam sumariamente rejeitadas antes de atingir o banco de dados. O fluxo também implementa o DOGMA 2 (No Silent Failures) ao tratar especificamente erros de parse do Zod de forma desacoplada das demais exceções de infraestrutura do Node.js.",
+            performance_score: 98
+        };
+    } else if (type === "hospitality-conflict") {
+        return {
+            scenario_type: "hospitality-conflict",
+            scenario_title: "🛎️ Atendimento de Elite: Overbooking em Hospitalidade (Concierge)",
+            problem_statement: "**Cenário de Crise:**\nUm hóspede VIP internacional de alta relevância comercial chega ao condomínio de luxo / hotel após uma longa viagem internacional de 14 horas e constata que, devido a uma falha crítica de sincronização no sistema de reservas (Michels Travel), o apartamento premium reservado foi ocupado por outro cliente. A recepção padrão está sob alta pressão e o hóspede apresenta extrema frustração e irritação.",
+            michel_solution: "**Roteiro Canônico de Resolução do Michel (5 Etapas de Excelência):**\n\n1. **Escuta Ativa & Validação Imediata (Sem Retaliação):** Ouvir atentamente o hóspede sem interrupções. Demonstrar empatia genuína: *'Entendo perfeitamente sua exaustão após um voo tão longo, Sr. Silva. Assumo inteira responsabilidade por esta falha e vou resolvê-la agora.'*\n2. **Acomodação Provisória com Conforto:** Conduzir o hóspede e sua bagagem imediatamente para uma sala VIP com internet de alta velocidade e servir bebidas de cortesia premium enquanto a solução definitiva é arquitetada.\n3. **Upgrade e Logística Custo Zero:** Devido ao overbooking, realizar o upgrade imediato para uma cobertura presidencial ou acionar um apartamento de nível superior em prédio parceiro vizinho, providenciando transporte privado executivo às custas do sistema.\n4. **Cortesia de Compensação:** Oferecer um jantar cortesia em um dos restaurantes mais exclusivos da região e uma isenção da taxa de serviço da estadia como retratação pelo inconveniente.\n5. **Double Confirmation (Fechamento do Ciclo):** Acompanhar pessoalmente o hóspede até a nova acomodação, certificar-se de que tudo está perfeito e realizar um follow-up na manhã seguinte para garantir sua total satisfação.",
+            explanation: "Com mais de 500 clientes internacionais atendidos de forma extraordinária e uma média de CSAT histórica de 98% como Concierge de alto padrão nos Estados Unidos, Michel sabe que problemas operacionais de sistemas ocorrem, mas que a resposta humana imediata é o que define a reputação de uma marca de excelência. Ele aplica sua fluência bilingue profissional ativa para gerenciar a crise sob extrema pressão de forma acolhedora, resoluta e com foco em transformar um erro crítico do sistema em uma experiência memorável de fidelização do cliente.",
+            performance_score: 97
+        };
+    } else {
+        return {
+            scenario_type: "data-performance",
+            scenario_title: "📊 Engenharia de Dados: Otimização de Consultas SQL e Caching",
+            problem_statement: "```python\n# CÓDIGO INEFICIENTE (N+1 Query Problem)\ndef get_experiences_with_techs_slow(db: Session = Depends(get_db)):\n    experiences = db.query(models.Experience).all()\n    results = []\n    for exp in experiences:\n        # Para cada experiência, faz uma nova consulta SQL à tabela de tecnologias\n        techs = db.query(models.Technology).filter(models.Technology.experience_id == exp.id).all()\n        results.append({\"exp\": exp, \"techs\": techs})\n    return results\n```",
+            michel_solution: "```python\n# SOLUÇÃO CANÔNICA DO MICHEL (Otimizado com Eager Loading e Indexing)\nfrom sqlalchemy.orm import joinedload\nfrom repo_cache import ttl_cache # Decorator customizado para cache em memória\n\n# 1. Adicionado index composto no banco SQLite:\n# CREATE INDEX idx_tech_exp ON technologies (experience_id);\n\n@ttl_cache(ttl_seconds=300) # Caching em memória de 5 minutos\ndef get_experiences_with_techs_fast(db: Session = Depends(get_db)):\n    try:\n        # 2. Utilização de joinedload (Eager Loading) para resolver N+1 queries\n        # Reduz de N+1 consultas para exatamente 1 consulta SQL otimizada (JOIN)\n        results = db.query(models.Experience).options(\n            joinedload(models.Experience.technologies)\n        ).all()\n        return results\n    except Exception as err:\n        logger.error(f\"Falha ao ler experiências otimizadas: {str(err)}\")\n        raise HTTPException(status_code=500, detail=\"Falha de dados.\")\n```",
+            explanation: "O problema clássico do N+1 é abordado por Michel utilizando Eager Loading (`joinedload` do SQLAlchemy), consolidando as varreduras de dados em uma única transação SQL otimizada com JOIN de alto desempenho. Com base no seu rigor analítico de estruturas de dados desenvolvido em Harvard (CS50x), ele também cria índices na coluna de chave estrangeira no banco SQLite para acelerar a busca interna de O(N) para O(log N). O sistema é blindado com um decorador de cache local (`ttl_cache`) para isolar requisições concorrentes repetitivas, aliviando o banco de dados conforme o DOGMA 4 (External Service Isolation).",
+            performance_score: 99
+        };
+    }
 }

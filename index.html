@@ -129,17 +129,122 @@
     <div class="cv-body">
         
         <!-- ===== DYNAMIC FILTER (EMPLOYER VIEW) ===== -->
-        <div class="p-3 mb-4 rounded" style="background: var(--dogma-bg); border: 1px solid var(--border); transition: all 0.3s;">
+        <div class="p-3 mb-3 rounded" style="background: var(--dogma-bg); border: 1px solid var(--border); transition: all 0.3s;">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <span class="fw-bold" style="font-size: 0.9rem; color: var(--text-main);"><i class="bi bi-funnel-fill text-primary me-2"></i>Foco do Recrutador:</span>
-                <select id="cv-profile-filter" class="form-select form-select-sm" style="width: auto; background: var(--bg-card); color: var(--text-main); border-color: var(--border); box-shadow: none;" onchange="applyProfileFilter(this.value)">
-                    <option value="all" selected>🌟 Ver Perfil Completo (Padrão)</option>
-                    <option value="tech">💻 Engenharia de Software / Tech</option>
-                    <option value="travel">✈️ Turismo e Hospitalidade</option>
-                    <option value="admin">🏢 Gestão, Logística e Administração</option>
-                </select>
+                <div>
+                    <span class="fw-bold" style="font-size: 0.9rem; color: var(--text-main);"><i class="bi bi-funnel-fill text-primary me-2"></i>Foco do Recrutador:</span>
+                    <select id="cv-profile-filter" class="form-select form-select-sm d-inline-block" style="width: auto; background: var(--bg-card); color: var(--text-main); border-color: var(--border); box-shadow: none;" onchange="applyProfileFilter(this.value)">
+                        <option value="all" selected>🌟 Ver Perfil Completo (Padrão)</option>
+                        <option value="tech">💻 Engenharia de Software / Tech</option>
+                        <option value="travel">✈️ Turismo e Hospitalidade</option>
+                        <option value="admin">🏢 Gestão, Logística e Administração</option>
+                    </select>
+                </div>
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="toggleFitAnalyzer()"><i class="bi bi-robot me-1"></i>AI Fit Analyzer</button>
             </div>
             <div id="filter-feedback" class="mt-2 text-success small fw-bold d-none" style="animation: fadeIn 0.3s;"><i class="bi bi-check-circle-fill me-1"></i>Currículo adaptado dinamicamente para esta vaga.</div>
+        </div>
+
+        <!-- ===== AI DUAL-TABS PANEL (MIDNIGHT GLASSMORPHISM) ===== -->
+        <div id="ai-fit-panel" class="p-4 mb-4 rounded d-none animate-fadeIn" style="background: var(--dogma-bg); border: 2px dashed rgba(37, 99, 235, 0.3); transition: all 0.3s; backdrop-filter: blur(10px);">
+            
+            <!-- ABAS DE NAVEGAÇÃO -->
+            <div class="d-flex border-bottom border-secondary mb-3 flex-wrap gap-2">
+                <button class="btn btn-link text-decoration-none text-light fw-bold pb-2 px-3 border-bottom border-2 border-primary" id="tab-compatibility-btn" onclick="switchAIFitTab('compatibility')" style="box-shadow: none; border-radius: 0; font-size: 0.88rem;">
+                    <i class="bi bi-magic me-1 text-primary"></i> Análise de Vaga
+                </button>
+                <button class="btn btn-link text-decoration-none text-muted fw-bold pb-2 px-3 border-bottom border-2 border-transparent" id="tab-scenario-btn" onclick="switchAIFitTab('scenario')" style="box-shadow: none; border-radius: 0; font-size: 0.88rem;">
+                    <i class="bi bi-terminal-fill me-1 text-cyan"></i> Casos Práticos & Resolução
+                </button>
+            </div>
+
+            <!-- CONTEÚDO DA ABA 1: COMPATIBILIDADE DE VAGA -->
+            <div id="ai-tab-compatibility-content">
+                <h4 class="fw-bold mb-2" style="font-size: 1.05rem; color: var(--primary);"><i class="bi bi-cpu-fill me-2"></i>AI Job Fit Analyzer</h4>
+                <p class="text-muted small mb-3">Cole a descrição ou os requisitos da vaga abaixo. A IA embarcada local do Michel analisará a compatibilidade e gerará uma síntese de alinhamento em tempo real.</p>
+                
+                <div class="mb-3">
+                    <textarea id="ai-job-desc" class="form-control text-light" rows="4" style="background: rgba(0,0,0,0.2); color: var(--text-main); border: 1px solid var(--border); font-size: 0.85rem; outline: none; box-shadow: none;" placeholder="Exemplo: Procuramos Desenvolvedor Full-Stack TypeScript com banco relacional e rigor de clean code..."></textarea>
+                </div>
+                
+                <button class="btn btn-primary btn-sm rounded-pill px-4 fw-bold" onclick="analyzeJobCompatibility()" id="ai-fit-btn">
+                    <span id="ai-fit-btn-text"><i class="bi bi-magic me-1"></i>Analisar Compatibilidade</span>
+                    <span id="ai-fit-btn-loader" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                </button>
+                
+                <!-- Resultados da Análise -->
+                <div id="ai-fit-results" class="mt-4 d-none">
+                    <hr class="border-secondary mb-3">
+                    <div class="row align-items-center mb-3">
+                        <div class="col-sm-3 text-center mb-3 mb-sm-0">
+                            <div class="position-relative d-inline-block">
+                                <div style="width: 82px; height: 82px; border-radius: 50%; border: 6px solid var(--border); display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.15); transition: border-color 0.3s;">
+                                    <span id="ai-fit-score" class="fw-bold text-primary" style="font-size: 1.3rem;">0%</span>
+                                </div>
+                            </div>
+                            <div class="small fw-bold text-muted mt-1" style="font-size: 0.72rem; text-transform: uppercase;">Match Score</div>
+                        </div>
+                        <div class="col-sm-9">
+                            <h5 class="fw-bold text-light mb-2" style="font-size: 0.92rem;"><i class="bi bi-compass-fill text-primary me-2"></i>Parecer de Compatibilidade</h5>
+                            <p id="ai-fit-pitch" style="font-size: 0.82rem; color: var(--text-desc); line-height: 1.6; margin-bottom: 0;"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="dogma-box mt-3" style="border-left-color: var(--accent); background: rgba(0,0,0,0.1); border-radius: 8px;">
+                        <h6 class="fw-bold text-cyan mb-2" style="font-size: 0.85rem;"><i class="bi bi-bookmark-star-fill me-1"></i>Pontos de Destaque Identificados</h6>
+                        <div id="ai-fit-strengths" style="font-size: 0.8rem; color: var(--text-desc); line-height: 1.7;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTEÚDO DA ABA 2: SIMULADOR DE CASOS PRÁTICOS -->
+            <div id="ai-tab-scenario-content" class="d-none animate-fadeIn">
+                <h4 class="fw-bold mb-2" style="font-size: 1.05rem; color: var(--accent);"><i class="bi bi-terminal-fill me-2"></i>Simulador de Casos Práticos por IA</h4>
+                <p class="text-muted small mb-3">Selecione um cenário desafiador de engenharia ou atendimento corporativo para ver na prática como Michel resolve o problema aplicando seus dogmas de excelência.</p>
+                
+                <div class="mb-3">
+                    <select id="ai-scenario-select" class="form-select form-select-sm text-light" style="background: rgba(0,0,0,0.25); color: var(--text-main); border: 1px solid var(--border); box-shadow: none; font-size: 0.85rem; padding: 0.45rem;">
+                        <option value="tech-security">🔒 Segurança: Refatorar Rota Vulnerável a SQL Injection em FastAPI</option>
+                        <option value="tech-validation">🛡️ Arquitetura Defensiva: Validação e Higienização Restrita com Zod</option>
+                        <option value="hospitality-conflict">🛎️ Atendimento de Luxo: Overbooking e Gestão de Crise de Cliente VIP</option>
+                        <option value="data-performance">📊 Engenharia de Dados: Consulta SQL N+1 Ineficiente e Indexação</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-info btn-sm text-dark rounded-pill px-4 fw-bold" onclick="runAIScenarioSimulation()" id="ai-scenario-btn" style="background: var(--accent); border-color: var(--accent);">
+                    <span id="ai-scenario-btn-text"><i class="bi bi-play-circle-fill me-1"></i>Simular Resolução por IA</span>
+                    <span id="ai-scenario-btn-loader" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                </button>
+                
+                <!-- Resultados da Simulação de Cenário -->
+                <div id="ai-scenario-results" class="mt-4 d-none">
+                    <hr class="border-secondary mb-3">
+                    
+                    <h5 class="fw-bold text-light mb-3" style="font-size: 0.95rem;" id="ai-sim-title">Cenário de Desafio</h5>
+                    
+                    <div class="mb-3">
+                        <div class="small fw-bold text-muted mb-1 text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.5px;">Desafio de Partida (Problema)</div>
+                        <div id="ai-sim-problem" style="font-size: 0.8rem;"></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="small fw-bold text-cyan mb-1 text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.5px;">Solução Canônica do Michel</div>
+                        <div id="ai-sim-solution" style="font-size: 0.8rem;"></div>
+                    </div>
+
+                    <div class="row g-3 align-items-center bg-black bg-opacity-25 p-3 rounded border border-secondary border-opacity-25">
+                        <div class="col-sm-9">
+                            <div class="small fw-bold text-success mb-1 text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.5px;"><i class="bi bi-cpu-fill me-1"></i>Parecer de Arquitetura & Justificativa</div>
+                            <p id="ai-sim-explanation" style="font-size: 0.8rem; color: var(--text-desc); line-height: 1.6; margin-bottom: 0;"></p>
+                        </div>
+                        <div class="col-sm-3 text-center border-start border-secondary border-opacity-25 ps-sm-3 mt-3 mt-sm-0">
+                            <div style="font-size: 1.85rem; font-weight: 800; color: var(--accent);" id="ai-sim-score">100%</div>
+                            <div class="small fw-bold text-muted text-uppercase" style="font-size: 0.62rem; letter-spacing: 0.5px;">CS50 Clean Code</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <div class="row g-4">
